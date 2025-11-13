@@ -96,15 +96,44 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
     ChuckerFlutter.showOnRelease = false;
     ChuckerFlutter.showNotification = widget.isShowBottomNotif;
 
-    // Only start listening in debug mode or if explicitly enabled
+    /// Conditionally initializes the shake detector.
+    ///
+    /// The shake detection feature is only activated under specific conditions to prevent
+    /// it from running in production builds unintentionally.
+    ///
+    /// Initialization occurs if either of the following is true:
+    /// - The app is running in debug mode (`kDebugMode` is `true`).
+    /// - The [widget.forceSowChucker] flag is explicitly set to `true`.
+    ///
+    /// When initialized, it creates a [ShakeDetector] that automatically starts listening
+    /// for shake events and calls [_onShakeDetected] when a shake occurs. A log message
+    /// is also printed to the console to confirm that the feature is active.
     if (kDebugMode || widget.forceSowChucker) {
       _detector = ShakeDetector.autoStart(onPhoneShake: _onShakeDetected);
-      log('📱 ShakeToShowChucker initialized '
-          '(trigger: ${widget.shakeCountTriggered} shakes)');
+      log('📱 ShakeToShowChucker initialized (Trigger: ${widget.shakeCountTriggered} shakes)');
     }
   }
 
-  /// Handles the logic for counting shake events.
+  /// Handles the logic for detecting and counting consecutive device shakes.
+  ///
+  /// This function is called whenever a shake event is detected. It maintains a
+  /// count of shakes that occur in quick succession (within 2 seconds of each
+  /// other). If the number of consecutive shakes reaches the
+  /// [widget.shakeCountTriggered] threshold, it triggers an action, such as
+  /// opening the Chucker debugging screen. The counter is reset if there's a
+  /// pause longer than 2 seconds between shakes or after a successful trigger.
+  ///
+  /// The logic follows these steps:
+  /// 1. On the first detected shake, it initializes the shake counter and records the timestamp.
+  /// 2. For subsequent shakes, it checks the time elapsed since the previous shake.
+  /// 3. If the elapsed time is more than 2 seconds, the shake counter is reset to 1.
+  /// 4. If the elapsed time is 2 seconds or less, the shake counter is incremented.
+  /// 5. When the counter reaches the configured `shakeCountTriggered`, the main action
+  ///    is performed, and the counter is reset to 0.
+  ///
+  /// Parameters:
+  /// - [event]: The dynamic event object passed from the shake detection listener.
+  ///   The content of this object is not used directly in this logic.
   void _onShakeDetected(dynamic event) {
     final now = DateTime.now();
 
@@ -130,7 +159,7 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
 
     // Trigger Chucker when the configured shake threshold is reached
     if (_shakeCount >= widget.shakeCountTriggered) {
-      debugPrint('🟢 Triggered by ${widget.shakeCountTriggered} shakes — opening Chucker.');
+      debugPrint('⚡ Triggered by ${widget.shakeCountTriggered} shakes — opening Chucker.');
       ChuckerFlutter.showChuckerScreen();
       _shakeCount = 0; // Reset after success
     }

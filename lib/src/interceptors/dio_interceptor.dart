@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
+import 'package:dio_extended/src/interceptors/ansi_color.dart';
 
 /// {@template dio_custom_interceptor}
 /// Dio interceptor for automatic token refresh and retry mechanism.
@@ -11,8 +12,8 @@ import 'package:dio/dio.dart';
 /// - Retries failed requests after refresh completes
 ///
 /// Log colors:
-/// 🔐 Refresh in progress → yellow  
-/// 🔑 Success → green  
+/// 🔐 Refresh in progress → yellow
+/// 🔑 Success → green
 /// ❌ Failure → red
 /// {@endtemplate}
 class DioInterceptor extends Interceptor {
@@ -20,12 +21,6 @@ class DioInterceptor extends Interceptor {
   final TokenRefreshCallback refreshTokenCallback;
   final int tokenExpiredCode;
   Completer<void>? _refreshCompleter;
-
-  // ANSI colors
-  static const _yellow = '\x1B[33m';
-  static const _green = '\x1B[32m';
-  static const _red = '\x1B[31m';
-  static const _reset = '\x1B[0m';
 
   DioInterceptor({
     required this.dio,
@@ -39,7 +34,7 @@ class DioInterceptor extends Interceptor {
 
     if (status == tokenExpiredCode) {
       assert(() {
-        developer.log('$_yellow 🔐 Token expired. Refreshing...$_reset', name: 'DIO-EXTENDED');
+        developer.log('${AnsiColor.yellow} 🔐 Token expired. Refreshing...${AnsiColor.reset}', name: 'DIO-EXTENDED');
         return true;
       }());
 
@@ -54,13 +49,13 @@ class DioInterceptor extends Interceptor {
           _refreshCompleter!.complete();
 
           assert(() {
-            developer.log('$_green 🔑 Token refreshed successfully$_reset', name: 'DIO-EXTENDED');
+            developer.log('${AnsiColor.green} 🔑 Token refreshed successfully${AnsiColor.reset}', name: 'DIO-EXTENDED');
             return true;
           }());
         } catch (e, st) {
           _refreshCompleter!.completeError(e);
           developer.log(
-            '$_red❌ Token refresh failed: $e$_reset',
+            '${AnsiColor.red} ❌ Token refresh failed: $e${AnsiColor.reset}',
             name: 'DIO-EXTENDED',
             level: 1000,
             error: e,
@@ -87,7 +82,7 @@ class DioInterceptor extends Interceptor {
 
         assert(() {
           developer.log(
-            '$_green🚀 Retried request successfully after token refresh$_reset',
+            '${AnsiColor.green} 🚀 Retried request successfully after token refresh${AnsiColor.reset}',
             name: 'DIO-EXTENDED',
           );
           return true;
@@ -96,7 +91,7 @@ class DioInterceptor extends Interceptor {
         return handler.resolve(newResponse);
       } catch (e) {
         developer.log(
-          '$_red❌ Retried request failed after token refresh: $e$_reset',
+          '${AnsiColor.red} ❌ Retried request failed after token refresh: $e${AnsiColor.reset}',
           name: 'DIO-EXTENDED',
           level: 1000,
         );
