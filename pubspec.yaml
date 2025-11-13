@@ -1,6 +1,6 @@
 name: dio_extended
 description: A powerful extension library for Dio that simplifies API handling, with clean error management, base service structure, and customizable interceptors.
-version: 1.0.0
+version: 1.0.1
 repository: https://github.com/anonimeact/diox-dio_extended.git
 environment:
   sdk: ">=3.0.0 <4.0.0"
