@@ -1,3 +1,7 @@
+## 1.0.4
+
+- Fix overriding refresh token function
+
 ## 1.0.3
 
 - Update Documentation & Example Implementation
