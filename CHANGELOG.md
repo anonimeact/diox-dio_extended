@@ -1,3 +1,7 @@
+## 1.0.2
+
+- Update table of content on README
+
 ## 1.0.1
 
 - Complete documentation
