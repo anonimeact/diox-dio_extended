@@ -44,13 +44,10 @@ class DioExtended {
   ///
   /// [baseUrl] must be provided. You can optionally pass [headers]
   /// to set global headers (like `Authorization`).
-  /// If [refreshTokenCallback] is provided, the token refresh interceptor
-  /// will automatically retry requests when a 401 (or custom [tokenExpiredCode]) occurs.
   DioExtended({
     required String baseUrl,
     Map<String, String>? headers,
-    this.tokenExpiredCode = 401,
-    TokenRefreshCallback? refreshTokenCallback,
+    this.tokenExpiredCode = 401
   }) {
     _dio = Dio(
       BaseOptions(
@@ -65,11 +62,13 @@ class DioExtended {
     _dio.interceptors.add(const LogApiInterceptor());
 
     // Add token refresh interceptor if a callback is provided
-    if (refreshTokenCallback != null) {
-      _dio.interceptors.add(
-        DioInterceptor(dio: _dio, refreshTokenCallback: refreshTokenCallback, tokenExpiredCode: tokenExpiredCode),
-      );
-    }
+    _dio.interceptors.add(
+      DioInterceptor(
+        dio: _dio,
+        refreshTokenCallback: () async => await handleTokenExpired(),
+        tokenExpiredCode: tokenExpiredCode,
+      ),
+    );
   }
 
   /// Exposes the underlying Dio instance for direct usage if needed.
