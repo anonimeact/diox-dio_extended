@@ -1,9 +1,9 @@
 import 'dart:io';
 
 import 'package:dio/dio.dart';
-import 'package:diox/models/api_result.dart';
-import 'package:diox/src/interceptors/dio_interceptor.dart';
-import 'package:diox/src/interceptors/log_api_interceptor.dart';
+import 'package:dio_extended/models/api_result.dart';
+import 'package:dio_extended/src/interceptors/dio_interceptor.dart';
+import 'package:dio_extended/src/interceptors/log_api_interceptor.dart';
 
 /// Defines which HTTP method is used for uploading [FormData].
 enum FormDataMethod { post, put }
@@ -42,13 +42,13 @@ class DioExtended {
 
   /// Creates a new DioExtended instance with standardized configuration.
   ///
-  /// [baseUrl] must be provided. You can optionally pass [defaultHeaders]
+  /// [baseUrl] must be provided. You can optionally pass [headers]
   /// to set global headers (like `Authorization`).
   /// If [refreshTokenCallback] is provided, the token refresh interceptor
   /// will automatically retry requests when a 401 (or custom [tokenExpiredCode]) occurs.
   DioExtended({
     required String baseUrl,
-    Map<String, String>? defaultHeaders,
+    Map<String, String>? headers,
     this.tokenExpiredCode = 401,
     TokenRefreshCallback? refreshTokenCallback,
   }) {
@@ -57,7 +57,7 @@ class DioExtended {
         baseUrl: baseUrl,
         connectTimeout: const Duration(seconds: 60),
         receiveTimeout: const Duration(seconds: 60),
-        headers: {'Accept': 'application/json', ...?defaultHeaders},
+        headers: {'Accept': 'application/json', ...?headers},
       ),
     );
 

@@ -1,4 +1,4 @@
-# diox (Dio Extended)
+# Dio Extended - DioX
 
 A light wrapper around `dio` that standardizes network calls, error handling,
 and optional token refresh logic. `diox` returns a unified `ApiResult<T>` for

@@ -30,7 +30,7 @@ environment:
 # versions available, run `flutter pub outdated`.
 dependencies:
   cupertino_icons: ^1.0.8
-  diox:
+  dio_extended:
     path: ../
   flutter:
     sdk: flutter

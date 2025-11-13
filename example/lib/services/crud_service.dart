@@ -1,5 +1,5 @@
-import 'package:diox/diox.dart';
-import 'package:diox/models/api_result.dart';
+import 'package:dio_extended/diox.dart';
+import 'package:dio_extended/models/api_result.dart';
 import 'package:example/models/post_model.dart';
 
 /// Service class untuk operasi CRUD post

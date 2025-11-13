@@ -27,7 +27,7 @@ Press F5 and select the “Run Example App” configuration.
 ==========================================================
 */
 
-import 'package:diox/diox.dart';
+import 'package:dio_extended/diox.dart';
 import 'package:example/statemanagement/origin/statefull_post_page_view.dart';
 import 'package:flutter/material.dart';
 import 'package:chucker_flutter/chucker_flutter.dart';

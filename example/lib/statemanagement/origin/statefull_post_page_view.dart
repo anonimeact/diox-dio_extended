@@ -1,4 +1,4 @@
-import 'package:diox/models/api_result.dart';
+import 'package:dio_extended/models/api_result.dart';
 import 'package:example/services/crud_service.dart';
 import 'package:flutter/material.dart';
 import '../../../models/post_model.dart';
