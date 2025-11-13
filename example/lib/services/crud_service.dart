@@ -4,7 +4,18 @@ import 'package:example/models/post_model.dart';
 
 /// Example service class untuk operasi CRUD post
 class CrudService extends DioExtended {
-  CrudService() : super(baseUrl: 'https://jsonplaceholder.typicode.com');
+  CrudService() : super(baseUrl: 'https://jsonplaceholder.typicode.com', tokenExpiredCode: 401);
+
+  /// Overriding [handleTokenExpired] to fetch new auth key or etc
+  @override
+  Future<dynamic> handleTokenExpired() async {
+    /// Chane this line with you functions
+    final newHeader = await Future.delayed(Duration(seconds: 3));
+
+    /// Send callback as Map
+    /// exemple {'Authentication': 'Bearer xxx'}
+    return newHeader;
+  }
 
   /// Fetches a list of all posts from the API.
   ///

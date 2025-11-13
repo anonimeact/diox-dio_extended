@@ -34,7 +34,15 @@ dependencies:
   dio_extended: ^latest
 ```
 
-> **Note**: The versions for `chucker_flutter` and `shake` are examples. Use the versions compatible with your project.
+> **Note**: 
+> - The versions for `chucker_flutter` and `shake` are examples. Use the versions compatible with your project.
+> - If you see error ***"Abortable' is from 'package:http/src/abortable.dart ...."*** when running, override chucker dependencies with master git version from *https://github.com/syedmurtaza108/chucker-flutter* on ***pubspect.yaml***. Because there are some issues with ***chucker_flutter*** last updated version
+
+    dependency_overrides:
+      chucker_flutter:
+        git:
+          url: https://github.com/syedmurtaza108/chucker-flutter.git
+          ref: master
 
 ## DioExtended: Simplified Networking
 
@@ -59,6 +67,13 @@ final api = DioExtended(
 // You can access the underlying Dio instance directly if needed
 final dioInstance = api.dio;
 ```
+If you want to create independent service, just do this on our class:
+
+    class CrudService extends DioExtended {
+      CrudService() : super(baseUrl: 'YOUR-BASE-URL');
+      /// Here you can use all function from DioExtend
+      /// examples of its use are available ini Request Exampel 
+    }
 
 ### GET Request Example
 
@@ -78,20 +93,26 @@ Making a GET request is simple. Provide a decoder function to parse the JSON res
     );
   }
 ```
-
+Using *callApiRequest* will make us easier to fetch and parsing with the result model.
 
 ### Token Refresh (Optional)
 
-To handle automatic token refresh, provide a `refreshTokenCallback`. The library will automatically use this callback when a request fails with a 401 status code and then retry the original request.
+To handle automatic token refresh, just overriding `handleTokenExpired` . The library will automatically use this callback when a request fails with a 401 status code (or you can set other code with `tokenExpiredCode`) and then retry the original request.
 
 ```dart
-Future<Map<String, dynamic>> myRefreshHandler() async {
-  // Your logic to get a new token, e.g., from a refresh endpoint
-  final newToken = await authService.refreshToken();
+class CrudService extends DioExtended {
+  CrudService() : super(baseUrl: 'https://jsonplaceholder.typicode.com', tokenExpiredCode:  401);
 
-  // Return the new authorization header
-  return {'Authorization': 'Bearer $newToken'};
-}
+  /// Overriding [handleTokenExpired] to fetch new auth key or etc
+  @override
+  Future<dynamic> handleTokenExpired() async {
+    final newHeader = await fetchNewAutn();
+
+    /// Send callback as Map
+    /// exemple {'Authentication': 'Bearer xxx'}
+    return newHeader;
+  }
+ }
 ```
 
 ## ShakeForChucker: Debug with a Shake
