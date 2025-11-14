@@ -1,8 +1,8 @@
-## 1.0.4
+## 1.0.5
 
 - Add supported platform
 - Update Readme.md
--
+- Optimize code
 
 ## 1.0.4
 
