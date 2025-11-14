@@ -4,9 +4,23 @@ import 'package:dio/dio.dart';
 import 'package:dio_extended/models/api_result.dart';
 import 'package:dio_extended/src/interceptors/dio_interceptor.dart';
 import 'package:dio_extended/src/interceptors/log_api_interceptor.dart';
+import 'package:flutter/foundation.dart';
 
 /// Defines which HTTP method is used for uploading [FormData].
 enum FormDataMethod { post, put }
+
+/// A collection of global error message constants used across the app.
+///
+/// Use these messages when displaying fallback or network-related errors
+/// to ensure consistent user-facing text throughout the application.
+class ErrorMessages {
+  /// A generic error message used for unexpected failures or unknown exceptions.
+  static const globalError = 'An error occurred, please try again later.';
+
+  /// A networking-specific error message used when the user has connectivity
+  /// issues, such as no internet connection or unstable network conditions.
+  static const globalNetworkError = 'An error occurred, please try again later or check your internet connection.';
+}
 
 /// {@template dio_extended}
 /// A base class that extends Dio functionality with standardized
@@ -18,14 +32,11 @@ enum FormDataMethod { post, put }
 ///
 /// It also integrates:
 /// - Custom logging via [LogApiInterceptor]
-/// - Token auto-refresh with [DioCustomInterceptor]
+/// - Token auto-refresh with [DioInterceptor]
 ///
 /// Example usage:
 /// ```dart
-/// final dio = DioExtended(
-///   baseUrl: 'https://api.example.com',
-///   refreshTokenCallback: myRefreshTokenHandler,
-/// );
+/// final dio = DioExtended( baseUrl: 'https://api.example.com');
 ///
 /// final result = await dio.get<User>('users/1', decoder: User.fromJson);
 ///
@@ -39,21 +50,43 @@ enum FormDataMethod { post, put }
 class DioExtended {
   late final Dio _dio;
   final int tokenExpiredCode;
+  final Duration timeout;
+  final String? globalErrorMessage;
+  final String? globalErrorNetworkingMessage;
 
-  /// Creates a new DioExtended instance with standardized configuration.
+  /// Creates a new [DioExtended] instance with standardized configuration.
   ///
-  /// [baseUrl] must be provided. You can optionally pass [headers]
-  /// to set global headers (like `Authorization`).
+  /// The [baseUrl] parameter is required and defines the root endpoint used
+  /// for all HTTP requests made through this instance.
+  ///
+  /// You may optionally provide custom [headers] to be applied globally
+  /// (e.g., `Authorization`, `Content-Type`, or any other HTTP header).
+  ///
+  /// The [tokenExpiredCode] is the HTTP status code that indicates the user's
+  /// authentication has expired. By default, it uses `401`.
+  ///
+  /// The [timeout] determines the maximum time allowed for each
+  /// request before it triggers a timeout exception. Default is 1 minute.
+  ///
+  /// The [globalErrorMessage] is a generic fallback error message used when
+  /// unexpected or unknown errors occur.
+  ///
+  /// The [globalErrorNetworkingMessage] is used specifically when network
+  /// conditions fail (e.g., no internet connection, DNS failure, or timeout).
   DioExtended({
     required String baseUrl,
     Map<String, String>? headers,
-    this.tokenExpiredCode = 401
+    this.tokenExpiredCode = 401,
+    this.timeout = const Duration(minutes: 1),
+    this.globalErrorMessage,
+    this.globalErrorNetworkingMessage,
   }) {
     _dio = Dio(
       BaseOptions(
         baseUrl: baseUrl,
-        connectTimeout: const Duration(seconds: 60),
-        receiveTimeout: const Duration(seconds: 60),
+        connectTimeout: timeout,
+        receiveTimeout: timeout,
+        sendTimeout:timeout,
         headers: {'Accept': 'application/json', ...?headers},
       ),
     );
@@ -345,9 +378,10 @@ class DioExtended {
   Future<ApiResult<T>> callApiRequest<T>({
     required Future<Response> Function() request,
     required T Function(dynamic data) parseData,
+    Duration? timeout
   }) async {
     try {
-      final response = await request();
+      final response = timeout != null ? await request().timeout(timeout) : await request();
       return _processResponse(response, decoder: parseData);
     } on DioException catch (e) {
       return _handleDioError(e);
@@ -381,11 +415,12 @@ class DioExtended {
         final decoded = decoder != null ? decoder(body) : body as T?;
         return ApiResult.success(decoded as T, statusCode: status);
       } catch (e) {
+        debugPrint('Failed to decode response: $e');
         return ApiResult.failure('Failed to decode response: $e', statusCode: status);
       }
     }
 
-    return ApiResult.failure(response.statusMessage ?? 'Request failed', statusCode: status);
+    return ApiResult.failure(response.statusMessage ??  ErrorMessages.globalError, statusCode: status);
   }
 
   /// Handles Dio-specific exceptions and converts them into a standardized [ApiResult].
@@ -406,13 +441,13 @@ class DioExtended {
     }
 
     if (e.error is SocketException) {
-      return ApiResult.failure('No Internet connection', statusCode: e.response?.statusCode);
+      return ApiResult.failure(ErrorMessages.globalNetworkError, statusCode: e.response?.statusCode);
     }
 
     final statusCode = e.response?.statusCode;
     final serverMessage = _extractErrorMessage(e.response?.data);
     final dioMessage = e.message;
-    final message = serverMessage ?? dioMessage ?? 'An unknown network error occurred';
+    final message = globalErrorMessage ?? serverMessage ?? dioMessage ?? ErrorMessages.globalError;
 
     return ApiResult.failure(message, statusCode: statusCode);
   }

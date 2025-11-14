@@ -36,10 +36,12 @@ class ApiResult<T> {
   // ---------------------------------------------------------------------------
 
   /// Creates a successful API result containing [data].
-  factory ApiResult.success(T data, {int? statusCode}) => ApiResult._(data: data, statusCode: statusCode);
+  factory ApiResult.success(T data, {int? statusCode}) =>
+      ApiResult._(data: data, statusCode: statusCode);
 
   /// Creates a failed API result with an [error] message.
-  factory ApiResult.failure(String error, {int? statusCode}) => ApiResult._(message: error, statusCode: statusCode);
+  factory ApiResult.failure(String error, {int? statusCode}) =>
+      ApiResult._(message: error, statusCode: statusCode);
 
   // ---------------------------------------------------------------------------
   // 📋 GETTERS
@@ -65,7 +67,10 @@ class ApiResult<T> {
   /// Convenience method to transform the `data` field
   /// (for example, mapping DTOs to domain models).
   ApiResult<R> map<R>(R Function(T data) transform) {
-    if (isSuccess && data != null) () => ApiResult.success(transform(data as T), statusCode: statusCode);
-    return ApiResult.failure(message ?? 'Unknown error', statusCode: statusCode);
+    if (isSuccess && data != null) {
+      ApiResult.success(transform(data as T), statusCode: statusCode);
+    }
+    return ApiResult.failure(message ?? 'Unknown error',
+        statusCode: statusCode);
   }
 }

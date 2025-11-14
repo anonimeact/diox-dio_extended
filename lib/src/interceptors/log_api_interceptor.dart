@@ -27,7 +27,8 @@ class LogApiInterceptor extends Interceptor {
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     assert(() {
       final msg = StringBuffer()
-        ..writeln('$requestColor🚀 [REQUEST] ${options.method} ${options.uri} #')
+        ..writeln(
+            '$requestColor🚀 [REQUEST] ${options.method} ${options.uri} #')
         ..writeln('$requestColor Headers: ${options.headers}');
       if (options.data != null) {
         msg.writeln(
@@ -46,7 +47,8 @@ class LogApiInterceptor extends Interceptor {
       final msg = StringBuffer()
         ..writeln(
             '$responseColor ✅  [RESPONSE] ${response.statusCode} ${response.requestOptions.uri}${AnsiColor.reset}')
-        ..writeln('$responseColor Data: ${_prettyPrintJson(data: response.data, color: AnsiColor.green)}');
+        ..writeln(
+            '$responseColor Data: ${_prettyPrintJson(data: response.data, color: AnsiColor.green)}');
 
       developer.log(msg.toString(), name: 'DIO-EXTENDED');
       return true;
@@ -58,13 +60,15 @@ class LogApiInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) {
     assert(() {
       final msg = StringBuffer()
-        ..writeln('$errorColor ❌ [ERROR] ${err.requestOptions.method} ${err.requestOptions.uri}')
+        ..writeln(
+            '$errorColor ❌ [ERROR] ${err.requestOptions.method} ${err.requestOptions.uri}')
         ..writeln('$errorColor Status: ${err.response?.statusCode}')
         ..writeln('$errorColor Message: ${err.message}')
         ..writeln(
             '$errorColor Body: ${_prettyPrintJson(data: err.response?.data, color: AnsiColor.red)}${AnsiColor.reset}');
 
-      developer.log('$errorColor${msg.toString()}${AnsiColor.reset}', name: 'DIO-EXTENDED', level: 1000);
+      developer.log('$errorColor${msg.toString()}${AnsiColor.reset}',
+          name: 'DIO-EXTENDED', level: 1000);
       return true;
     }());
     super.onError(err, handler);

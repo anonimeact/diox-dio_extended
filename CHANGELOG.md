@@ -1,3 +1,8 @@
+## 1.0.6
+
+- Add custom timout duration
+- Add custom global error and global error network message
+
 ## 1.0.5
 
 - Add supported platform

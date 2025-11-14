@@ -34,7 +34,9 @@ class DioInterceptor extends Interceptor {
 
     if (status == tokenExpiredCode) {
       assert(() {
-        developer.log('${AnsiColor.yellow} 🔐 Token expired. Refreshing...${AnsiColor.reset}', name: 'DIO-EXTENDED');
+        developer.log(
+            '${AnsiColor.yellow} 🔐 Token expired. Refreshing...${AnsiColor.reset}',
+            name: 'DIO-EXTENDED');
         return true;
       }());
 
@@ -49,7 +51,9 @@ class DioInterceptor extends Interceptor {
           _refreshCompleter!.complete();
 
           assert(() {
-            developer.log('${AnsiColor.green} 🔑 Token refreshed successfully${AnsiColor.reset}', name: 'DIO-EXTENDED');
+            developer.log(
+                '${AnsiColor.green} 🔑 Token refreshed successfully${AnsiColor.reset}',
+                name: 'DIO-EXTENDED');
             return true;
           }());
         } catch (e, st) {
@@ -95,7 +99,8 @@ class DioInterceptor extends Interceptor {
           name: 'DIO-EXTENDED',
           level: 1000,
         );
-        return handler.reject(DioException(requestOptions: err.requestOptions, error: e));
+        return handler
+            .reject(DioException(requestOptions: err.requestOptions, error: e));
       }
     }
 

@@ -14,7 +14,7 @@ import 'package:shake/shake.dart';
 /// enabling quick access to Chucker without code changes or manual buttons.
 ///
 /// 🚀 Features:
-/// - Automatically detects shake gestures using the [shake] package.
+/// - Automatically detects shake gestures using the shake package.
 /// - Opens the Chucker UI after a configurable number of shakes
 ///   within a short period (default: 3 shakes within 2 seconds).
 /// - Automatically disabled in release mode (unless explicitly enabled).
@@ -159,7 +159,8 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
 
     // Trigger Chucker when the configured shake threshold is reached
     if (_shakeCount >= widget.shakeCountTriggered) {
-      debugPrint('⚡ Triggered by ${widget.shakeCountTriggered} shakes — opening Chucker.');
+      debugPrint(
+          '⚡ Triggered by ${widget.shakeCountTriggered} shakes — opening Chucker.');
       ChuckerFlutter.showChuckerScreen();
       _shakeCount = 0; // Reset after success
     }
