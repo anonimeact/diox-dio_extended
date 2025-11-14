@@ -1,3 +1,7 @@
+## 1.0.7
+
+- Format with dart format
+
 ## 1.0.6
 
 - Add custom timout duration
