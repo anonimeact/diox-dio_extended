@@ -19,7 +19,8 @@ class ErrorMessages {
 
   /// A networking-specific error message used when the user has connectivity
   /// issues, such as no internet connection or unstable network conditions.
-  static const globalNetworkError = 'An error occurred, please try again later or check your internet connection.';
+  static const globalNetworkError =
+      'An error occurred, please try again later or check your internet connection.';
 }
 
 /// {@template dio_extended}
@@ -86,7 +87,7 @@ class DioExtended {
         baseUrl: baseUrl,
         connectTimeout: timeout,
         receiveTimeout: timeout,
-        sendTimeout:timeout,
+        sendTimeout: timeout,
         headers: {'Accept': 'application/json', ...?headers},
       ),
     );
@@ -175,7 +176,8 @@ class DioExtended {
   ///
   /// Throws:
   /// - Any `DioException` (or other exceptions) that occur during the request.
-  Future<Response> post(String endpoint, {required dynamic body, dynamic query, dynamic customheader}) async {
+  Future<Response> post(String endpoint,
+      {required dynamic body, dynamic query, dynamic customheader}) async {
     try {
       return await _dio.post(
         endpoint,
@@ -216,7 +218,8 @@ class DioExtended {
   ///
   /// Throws:
   /// - Any `DioException` (or other exceptions) that occur during the request.
-  Future<Response> put(String endpoint, {dynamic body, dynamic query, dynamic customheader}) async {
+  Future<Response> put(String endpoint,
+      {dynamic body, dynamic query, dynamic customheader}) async {
     try {
       return await _dio.put(
         endpoint,
@@ -255,7 +258,8 @@ class DioExtended {
   ///
   /// Throws:
   /// - Any `DioException` (or other exceptions) that occur during the request.
-  Future<Response> delete(String endpoint, {dynamic body, dynamic query}) async {
+  Future<Response> delete(String endpoint,
+      {dynamic body, dynamic query}) async {
     try {
       return await _dio.delete(endpoint, data: body, queryParameters: query);
     } catch (e) {
@@ -276,7 +280,8 @@ class DioExtended {
       List<MultipartFile> multipartFiles = await Future.wait(
         filesFiltered.map((file) async {
           String fileName = file?.path.split('/').last ?? '';
-          return await MultipartFile.fromFile(file?.path ?? '', filename: fileName);
+          return await MultipartFile.fromFile(file?.path ?? '',
+              filename: fileName);
         }),
       );
 
@@ -311,11 +316,14 @@ class DioExtended {
           List<MultipartFile> multipartFiles = await Future.wait(
             validFiles.map((file) async {
               String fileName = file!.path.split('/').last;
-              return await MultipartFile.fromFile(file.path, filename: fileName);
+              return await MultipartFile.fromFile(file.path,
+                  filename: fileName);
             }),
           );
 
-          fileMap[key] = multipartFiles.length == 1 ? multipartFiles.first : multipartFiles;
+          fileMap[key] = multipartFiles.length == 1
+              ? multipartFiles.first
+              : multipartFiles;
         }
       }
 
@@ -375,13 +383,13 @@ class DioExtended {
   ///   `ApiResult` where `isSuccess` is `true` and the `data` property holds the parsed object.
   ///   On any other status code or network exception, it completes with an `ApiResult`
   ///   where `isFailure` is `true` and the `message` property contains the error details.
-  Future<ApiResult<T>> callApiRequest<T>({
-    required Future<Response> Function() request,
-    required T Function(dynamic data) parseData,
-    Duration? timeout
-  }) async {
+  Future<ApiResult<T>> callApiRequest<T>(
+      {required Future<Response> Function() request,
+      required T Function(dynamic data) parseData,
+      Duration? timeout}) async {
     try {
-      final response = timeout != null ? await request().timeout(timeout) : await request();
+      final response =
+          timeout != null ? await request().timeout(timeout) : await request();
       return _processResponse(response, decoder: parseData);
     } on DioException catch (e) {
       return _handleDioError(e);
@@ -406,7 +414,8 @@ class DioExtended {
   /// Returns:
   /// - An `ApiResult.success<T>` if the status code is successful and decoding is successful.
   /// - An `ApiResult.failure<T>` if the status code is not successful or if decoding fails.
-  ApiResult<T> _processResponse<T>(Response response, {T Function(dynamic data)? decoder}) {
+  ApiResult<T> _processResponse<T>(Response response,
+      {T Function(dynamic data)? decoder}) {
     final status = response.statusCode ?? 0;
 
     if (status >= 200 && status < 300) {
@@ -416,11 +425,14 @@ class DioExtended {
         return ApiResult.success(decoded as T, statusCode: status);
       } catch (e) {
         debugPrint('Failed to decode response: $e');
-        return ApiResult.failure('Failed to decode response: $e', statusCode: status);
+        return ApiResult.failure('Failed to decode response: $e',
+            statusCode: status);
       }
     }
 
-    return ApiResult.failure(response.statusMessage ??  ErrorMessages.globalError, statusCode: status);
+    return ApiResult.failure(
+        response.statusMessage ?? ErrorMessages.globalError,
+        statusCode: status);
   }
 
   /// Handles Dio-specific exceptions and converts them into a standardized [ApiResult].
@@ -437,17 +449,22 @@ class DioExtended {
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
-      return ApiResult.failure('Request timeout', statusCode: e.response?.statusCode);
+      return ApiResult.failure('Request timeout',
+          statusCode: e.response?.statusCode);
     }
 
     if (e.error is SocketException) {
-      return ApiResult.failure(ErrorMessages.globalNetworkError, statusCode: e.response?.statusCode);
+      return ApiResult.failure(ErrorMessages.globalNetworkError,
+          statusCode: e.response?.statusCode);
     }
 
     final statusCode = e.response?.statusCode;
     final serverMessage = _extractErrorMessage(e.response?.data);
     final dioMessage = e.message;
-    final message = globalErrorMessage ?? serverMessage ?? dioMessage ?? ErrorMessages.globalError;
+    final message = globalErrorMessage ??
+        serverMessage ??
+        dioMessage ??
+        ErrorMessages.globalError;
 
     return ApiResult.failure(message, statusCode: statusCode);
   }
