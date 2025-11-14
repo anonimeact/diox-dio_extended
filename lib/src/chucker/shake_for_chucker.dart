@@ -108,7 +108,7 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
     /// When initialized, it creates a [ShakeDetector] that automatically starts listening
     /// for shake events and calls [_onShakeDetected] when a shake occurs. A log message
     /// is also printed to the console to confirm that the feature is active.
-    if (kDebugMode || widget.forceSowChucker) {
+    if (!kIsWeb || kDebugMode || widget.forceSowChucker) {
       _detector = ShakeDetector.autoStart(onPhoneShake: _onShakeDetected);
       log('📱 ShakeToShowChucker initialized (Trigger: ${widget.shakeCountTriggered} shakes)');
     }

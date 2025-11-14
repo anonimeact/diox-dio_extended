@@ -22,7 +22,6 @@ This package also includes `ShakeForChucker`, a developer helper that allows you
 -   **Simplified API**: Handles requests and responses through a clean `ApiResult<T>` interface.
 -   **Automatic JSON Parsing**: Easily decode responses to your model objects with a simple `decoder` function.
 -   **Built-in Token Refresh**: Provides a callback mechanism to automatically handle authentication token expiration and retry requests.
--   **File Upload Support**: Simplifies `FormData` submissions with progress callbacks.
 -   **Shake for Debugging**: Integrate `ShakeForChucker` to open the network inspector with a simple gesture, perfect for development and QA.
 
 ## Installation
@@ -61,19 +60,19 @@ final api = DioExtended(
     'Accept': 'application/json',
     'Content-Type': 'application/json',
   },
-  refreshTokenCallback: myRefreshHandler, // Optional: for automatic token refresh
 );
 
 // You can access the underlying Dio instance directly if needed
 final dioInstance = api.dio;
 ```
 If you want to create independent service, just do this on our class:
-
-    class CrudService extends DioExtended {
-      CrudService() : super(baseUrl: 'YOUR-BASE-URL');
-      /// Here you can use all function from DioExtend
-      /// examples of its use are available ini Request Exampel 
-    }
+```
+class CrudService extends DioExtended {
+  CrudService() : super(baseUrl: 'YOUR-BASE-URL');
+  /// Here you can use all function from DioExtend
+  /// examples of its use are available ini Request Exampel 
+}
+```
 
 ### GET Request Example
 
@@ -92,8 +91,23 @@ Making a GET request is simple. Provide a decoder function to parse the JSON res
           .toList(),
     );
   }
+	
+  /// Example for single model
+  Future<ApiResult<PostModel>> getPosts() async {
+    return await callApiRequest<List<PostModel>>(
+      request: () => get('/posts'),
+      parseData: (data) => PostModel.fromJson(itemJson)
+    );
+  }
 ```
-Using *callApiRequest* will make us easier to fetch and parsing with the result model.
+Using *callApiRequest* will make us easier to fetch and parsing with the result model. In controller side (business logic), you can checking the result just using isSuccess or not.
+
+    ```
+	    final result = await _service.getPost();
+	    if (result.isSuccess) {
+			   /// Your logic here
+	    }
+    ```
 
 ### Token Refresh (Optional)
 

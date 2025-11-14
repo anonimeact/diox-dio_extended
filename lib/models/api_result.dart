@@ -65,7 +65,7 @@ class ApiResult<T> {
   /// Convenience method to transform the `data` field
   /// (for example, mapping DTOs to domain models).
   ApiResult<R> map<R>(R Function(T data) transform) {
-    if (isSuccess && data != null) () => ApiResult.success(transform(data as T), statusCode: this.statusCode);
-    return ApiResult.failure(message ?? 'Unknown error', statusCode: this.statusCode);
+    if (isSuccess && data != null) () => ApiResult.success(transform(data as T), statusCode: statusCode);
+    return ApiResult.failure(message ?? 'Unknown error', statusCode: statusCode);
   }
 }

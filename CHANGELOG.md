@@ -1,5 +1,11 @@
 ## 1.0.4
 
+- Add supported platform
+- Update Readme.md
+-
+
+## 1.0.4
+
 - Fix overriding refresh token function
 
 ## 1.0.3

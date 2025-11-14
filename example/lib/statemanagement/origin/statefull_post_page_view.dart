@@ -34,9 +34,11 @@ class _StatefullPostPageViewState extends State<StatefullPostPageView> {
     final result = await _service.createPost(newPost);
 
     if (result.isSuccess) {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post created successfully!')));
       setState(_loadPosts); // refresh list
     } else {
+      // ignore: use_build_context_synchronously
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.message ?? 'Failed to create post')));
     }
   }
