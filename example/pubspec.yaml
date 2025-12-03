@@ -37,12 +37,6 @@ dependencies:
   freezed_annotation: ^3.1.0
   json_annotation: ^4.9.0
 
-dependency_overrides:
-  chucker_flutter:
-    git:
-      url: https://github.com/syedmurtaza108/chucker-flutter.git
-      ref: master
-
 dev_dependencies:
   build_runner: ^2.10.2
   flutter_lints: ^5.0.0

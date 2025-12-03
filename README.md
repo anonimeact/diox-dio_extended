@@ -35,13 +35,6 @@ dependencies:
 
 > **Note**: 
 > - The versions for `chucker_flutter` and `shake` are examples. Use the versions compatible with your project.
-> - If you see error ***"Abortable' is from 'package:http/src/abortable.dart ...."*** when running, override chucker dependencies with master git version from *https://github.com/syedmurtaza108/chucker-flutter* on ***pubspect.yaml***. Because there are some issues with ***chucker_flutter*** last updated version
-
-    dependency_overrides:
-      chucker_flutter:
-        git:
-          url: https://github.com/syedmurtaza108/chucker-flutter.git
-          ref: master
 
 ## DioExtended: Simplified Networking
 

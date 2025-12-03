@@ -1,3 +1,7 @@
+## 1.0.8
+
+- Upgrade chucker 1.9.0 (No need override)
+
 ## 1.0.7
 
 - Format with dart format
