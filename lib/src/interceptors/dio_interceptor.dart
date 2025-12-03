@@ -28,6 +28,48 @@ class DioInterceptor extends Interceptor {
     this.tokenExpiredCode = 401,
   });
 
+  /// Interceptor responsible for dynamically setting the appropriate
+  /// `Content-Type` header based on the request payload.
+  ///
+  /// Behavior:
+  ///
+  /// • **Multipart / FormData request**
+  ///   When `options.data` is a `FormData` instance, the request is considered
+  ///   a multipart upload. Multipart requests **must not** use a JSON
+  ///   Content-Type, because Dio needs to generate its own multipart boundary.
+  ///   Therefore:
+  ///     - The `Content-Type` header is removed
+  ///     - `options.contentType` is set to `null` to let Dio generate the correct
+  ///       `multipart/form-data; boundary=...` header automatically
+  ///
+  /// • **Regular JSON request**
+  ///   If the request is not multipart, it is treated as a regular JSON request.
+  ///   In this case, the Content-Type is explicitly set to `application/json`.
+  ///
+  /// This prevents errors such as:
+  /// `Invalid argument (contentType): Unable to set different values for contentType and the content-type header.`
+  /// which occur when multipart requests accidentally inherit a JSON Content-Type.
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (options.data is FormData) {
+      options.headers.remove('Content-Type');
+      options.contentType = null;
+    } else {
+      options.contentType = Headers.jsonContentType;
+    }
+    handler.next(options);
+  }
+
+  /// Interceptor responsible for handling Dio errors, including token-expiration scenarios.
+  ///
+  /// • If the server responds with the configured `tokenExpiredCode`,
+  ///   the interceptor attempts to refresh the token using the provided
+  ///   `refreshTokenCallback`.
+  ///
+  /// • After the token is refreshed, the original request can be retried.
+  ///
+  /// • If the error is unrelated to token expiration, it is passed through
+  ///   unchanged.
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final status = err.response?.statusCode;
@@ -35,7 +77,7 @@ class DioInterceptor extends Interceptor {
     if (status == tokenExpiredCode) {
       assert(() {
         developer.log(
-            '${AnsiColor.yellow} 🔐 Token expired. Refreshing...${AnsiColor.reset}',
+            '${AnsiColor.magenta} 🔐 Token expired. Refreshing...${AnsiColor.reset}',
             name: 'DIO-EXTENDED');
         return true;
       }());

@@ -1,3 +1,7 @@
+## 1.0.9
+
+- Separate content type FormData and others
+
 ## 1.0.8
 
 - Upgrade chucker 1.9.0 (No need override)
