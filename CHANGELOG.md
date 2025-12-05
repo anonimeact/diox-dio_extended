@@ -1,3 +1,7 @@
+## 1.0.10
+
+- Fix shake for chucker integration 
+
 ## 1.0.9
 
 - Separate content type FormData and others

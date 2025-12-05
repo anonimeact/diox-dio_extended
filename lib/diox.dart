@@ -33,3 +33,4 @@ library;
 
 export 'src/dio_extended.dart';
 export 'src/chucker/shake_for_chucker.dart';
+export 'src/chucker/shake_chucker_configs.dart';

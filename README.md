@@ -137,19 +137,24 @@ import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio_extended/src/chucker/shake_for_chucker.dart'; // Import path for ShakeForChucker
 
 void main() {
+
+  // Init chucker configs
+  // Do this before runApp
+  ShakeChuckerConfigs.initialize(
+    showOnRelease: true,
+    showNotification: true,
+  );
+
   runApp(
     ShakeForChucker(
-      // Set to true to enable in release/staging builds for QA
-      forceShowChucker: true, 
       // Number of shakes needed to trigger Chucker (default is 3)
       shakeCountTriggered: 3, 
-      // Shows a bottom notification when Chucker is opened
-      isShowBottomNotif: true, 
+
       child: MaterialApp(
         title: 'DioExtended Demo',
         // This observer is required for Chucker to work correctly
         navigatorObservers: [
-          ChuckerFlutter.navigatorObserver,
+          ShakeChuckerConfigs.navigatorObserver,
         ],
         home: const MyHomePage(),
       ),
@@ -157,9 +162,3 @@ void main() {
   );
 }
 ```
-
-#### Important Parameters:
-
--   **`forceShowChucker`**: When `true`, this feature will be active even in non-debug builds (`kReleaseMode`). This is very useful for testing on staging or QA builds.
--   **`shakeCountTriggered`**: The number of shakes required within a 2-second window to open the Chucker UI.
--   **`isShowBottomNotif`**: If `true`, a small notification will appear at the bottom of the screen to confirm that Chucker has been opened.

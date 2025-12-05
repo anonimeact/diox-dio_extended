@@ -60,24 +60,14 @@ class ShakeForChucker extends StatefulWidget {
   /// The widget subtree wrapped by this widget.
   final Widget child;
 
-  /// Whether to enable the shake-to-open feature outside of `kDebugMode`.
-  /// Useful for QA or staging builds.
-  final bool forceSowChucker;
-
   /// The number of shakes required to trigger Chucker.
   /// Defaults to **3 shakes** within 2 seconds.
   final int shakeCountTriggered;
 
-  /// Whether to show a bottom notification when Chucker is active.
-  /// Defaults to **false**.
-  final bool isShowBottomNotif;
-
   const ShakeForChucker({
     super.key,
     required this.child,
-    this.forceSowChucker = false,
     this.shakeCountTriggered = 3,
-    this.isShowBottomNotif = false,
   });
 
   @override
@@ -93,9 +83,6 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
   void initState() {
     super.initState();
 
-    ChuckerFlutter.showOnRelease = false;
-    ChuckerFlutter.showNotification = widget.isShowBottomNotif;
-
     /// Conditionally initializes the shake detector.
     ///
     /// The shake detection feature is only activated under specific conditions to prevent
@@ -108,7 +95,7 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
     /// When initialized, it creates a [ShakeDetector] that automatically starts listening
     /// for shake events and calls [_onShakeDetected] when a shake occurs. A log message
     /// is also printed to the console to confirm that the feature is active.
-    if (!kIsWeb || kDebugMode || widget.forceSowChucker) {
+    if (!kIsWeb || kDebugMode || ChuckerFlutter.showOnRelease) {
       _detector = ShakeDetector.autoStart(onPhoneShake: _onShakeDetected);
       log('📱 ShakeToShowChucker initialized (Trigger: ${widget.shakeCountTriggered} shakes)');
     }

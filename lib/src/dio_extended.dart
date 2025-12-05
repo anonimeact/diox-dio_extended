@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:chucker_flutter/chucker_flutter.dart';
 import 'package:dio/dio.dart';
 import 'package:dio_extended/models/api_result.dart';
 import 'package:dio_extended/src/interceptors/dio_interceptor.dart';
@@ -94,6 +95,9 @@ class DioExtended {
 
     // Add debug logging interceptor (only active in debug mode)
     _dio.interceptors.add(const LogApiInterceptor());
+
+    // Add chucker interceptor
+    _dio.interceptors.add(ChuckerDioInterceptor());
 
     // Add token refresh interceptor if a callback is provided
     _dio.interceptors.add(
