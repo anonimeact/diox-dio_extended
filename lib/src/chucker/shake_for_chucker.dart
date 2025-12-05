@@ -106,19 +106,6 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
   void initState() {
     super.initState();
 
-    /// Conditionally initializes the shake detector.
-    ///
-    /// The shake detection feature is only activated under specific conditions to prevent
-    /// it from running in production builds unintentionally.
-    ///
-    /// Initialization occurs if either of the following is true:
-    /// - The app is running in debug mode (`kDebugMode` is `true`).
-    /// - The [widget.forceSowChucker] flag is explicitly set to `true`.
-    ///
-    /// When initialized, it creates a [ShakeDetector] that automatically starts listening
-    /// for shake events and calls [_onShakeDetected] when a shake occurs. A log message
-    /// is also printed to the console to confirm that the feature is active.
-
     if (widget.forceHideChucker) {
       return;
     }
