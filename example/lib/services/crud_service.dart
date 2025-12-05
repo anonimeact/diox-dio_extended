@@ -4,7 +4,10 @@ import 'package:example/models/post_model.dart';
 
 /// Example service class untuk operasi CRUD post
 class CrudService extends DioExtended {
-  CrudService() : super(baseUrl: 'https://jsonplaceholder.typicode.com', tokenExpiredCode: 401);
+  CrudService()
+      : super(
+            baseUrl: 'https://jsonplaceholder.typicode.com',
+            tokenExpiredCode: 401);
 
   /// Overriding [handleTokenExpired] to fetch new auth key or etc
   @override

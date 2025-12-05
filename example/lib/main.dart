@@ -33,8 +33,8 @@ import 'package:flutter/material.dart';
 
 void main() {
   ShakeChuckerConfigs.initialize(
-    showOnRelease: true,
-    showNotification: true,
+    showOnRelease: false,
+    showNotification: false,
   );
   runApp(
     ShakeForChucker(

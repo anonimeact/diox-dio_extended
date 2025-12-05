@@ -1,3 +1,7 @@
+## 1.0.11
+
+- Adjust logging form data (multiparts) data delivery
+
 ## 1.0.10
 
 - Fix shake for chucker integration 

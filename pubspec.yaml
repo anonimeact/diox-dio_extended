@@ -12,6 +12,8 @@ dependencies:
   dio: ^5.9.0
   flutter:
     sdk: flutter
+  http_parser: ^4.1.2
+  mime: ^2.0.0
   shake: ^3.0.0
 
 dev_dependencies:

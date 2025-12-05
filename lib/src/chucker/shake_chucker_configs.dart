@@ -49,11 +49,11 @@ class ShakeChuckerConfigs {
   ///
   /// Parameters:
   ///
-  /// - [showOnRelease]  
+  /// - [showOnRelease]
   ///   Determines whether the Chucker UI should be accessible in
   ///   **release builds**. Set to `true` to enable Chucker in release mode.
   ///
-  /// - [showNotification]  
+  /// - [showNotification]
   ///   Controls whether Chucker should display the floating
   ///   **notification overlay** that allows opening the Chucker inspector.
   ///

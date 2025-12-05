@@ -64,10 +64,13 @@ class ShakeForChucker extends StatefulWidget {
   /// Defaults to **3 shakes** within 2 seconds.
   final int shakeCountTriggered;
 
+  final bool forceHideChucker;
+
   const ShakeForChucker({
     super.key,
     required this.child,
     this.shakeCountTriggered = 3,
+    this.forceHideChucker = false,
   });
 
   @override
@@ -79,6 +82,26 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
   int _shakeCount = 0;
   DateTime? _lastShakeTime;
 
+  /// Initializes the shake detector based on configuration flags.
+  ///
+  /// This widget conditionally enables the "Shake to Show Chucker" feature.
+  /// The detector will only start when the feature is allowed by the following rules:
+  ///
+  /// - If [widget.forceHideChucker] is `true`, the feature is disabled entirely and
+  ///   the method returns immediately. No shake detection logic will run.
+  ///
+  /// - If `kIsWeb` is `false` (i.e., running on mobile) **OR** the app is running in
+  ///   debug mode (`kDebugMode == true`) **OR** the `ChuckerFlutter.showOnRelease` flag
+  ///   is set to `true`, then the shake detector is initialized.
+  ///
+  /// When activated, a [ShakeDetector] is created using `autoStart`, which begins
+  /// listening for shake events automatically. Each detected shake triggers
+  /// the [_onShakeDetected] callback. A log message is printed to confirm that
+  /// the feature has been enabled.
+  ///
+  /// Behavior summary:
+  /// - `forceHideChucker == true` → Shake detection disabled, exit early.
+  /// - Otherwise, shake detection runs based on platform + debug/release conditions.
   @override
   void initState() {
     super.initState();
@@ -95,7 +118,12 @@ class _ShakeForChuckerState extends State<ShakeForChucker> {
     /// When initialized, it creates a [ShakeDetector] that automatically starts listening
     /// for shake events and calls [_onShakeDetected] when a shake occurs. A log message
     /// is also printed to the console to confirm that the feature is active.
-    if (!kIsWeb || kDebugMode || ChuckerFlutter.showOnRelease) {
+
+    if (widget.forceHideChucker) {
+      return;
+    }
+
+    if (kDebugMode || ChuckerFlutter.showOnRelease) {
       _detector = ShakeDetector.autoStart(onPhoneShake: _onShakeDetected);
       log('📱 ShakeToShowChucker initialized (Trigger: ${widget.shakeCountTriggered} shakes)');
     }

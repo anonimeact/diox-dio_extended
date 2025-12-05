@@ -1,3 +1,5 @@
+// ignore_for_file: unintended_html_in_doc_comment
+
 import 'dart:io';
 
 import 'package:chucker_flutter/chucker_flutter.dart';
@@ -6,6 +8,8 @@ import 'package:dio_extended/models/api_result.dart';
 import 'package:dio_extended/src/interceptors/dio_interceptor.dart';
 import 'package:dio_extended/src/interceptors/log_api_interceptor.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http_parser/http_parser.dart';
+import 'package:mime/mime.dart';
 
 /// Defines which HTTP method is used for uploading [FormData].
 enum FormDataMethod { post, put }
@@ -271,74 +275,169 @@ class DioExtended {
     }
   }
 
-  // Multipart / FormData upload
+  /// Supports:
+  /// - Single-field multi-file uploads
+  /// - Multi-field multi-file uploads
+  /// - Multi-field single-file uploads
+  /// - Mixed upload modes
+  /// - Any combination of files + normal fields
+  /// - Automatic MIME type detection for every file
+  ///
+  /// PARAMETERS:
+  /// - [singleFiles] : List<File?> for a single field
+  /// - [singleFieldName] : Field name for singleFiles
+  /// - [files] : Map<String, List<File?>> representing multi-field uploads
+  /// - [body] : additional text fields (Map<String, dynamic>)
+  /// - [method] : POST or PUT
+  ///
+  /// The function automatically:
+  /// - Filters out null files
+  /// - Detects correct MIME types using `package:mime`
+  /// - Converts everything into MultipartFile
+  /// - Merges files + body into a single FormData object
+  /// - Sends with Dio POST/PUT
+  ///
+  ///
+  /// ---------------------------------------------------------------------------
+  /// USAGE EXAMPLES
+  ///
+  ///
+  /// EXAMPLE 1 — Single-field multi-file
+  /// -----------------------------------
+  ///
+  /// await sendFormData(
+  ///   "/upload",
+  ///   singleFiles: [file1, file2],
+  ///   singleFieldName: "images",
+  ///   body: {"title": "My Gallery"},
+  /// );
+  ///
+  ///
+  /// EXAMPLE 2 — Multi-field single-file
+  /// -----------------------------------
+  ///
+  /// await sendFormData(
+  ///   "/upload",
+  ///   files: {
+  ///     "image_1": [file1],
+  ///     "image_2": [file2],
+  ///   },
+  ///   body: {"user_id": 123},
+  /// );
+  ///
+  ///
+  /// EXAMPLE 3 — Multi-field multi-file
+  /// -----------------------------------
+  ///
+  /// await sendFormData(
+  ///   "/upload",
+  ///   files: {
+  ///     "documents": [doc1, doc2],
+  ///     "photos": [p1, p2, p3],
+  ///   },
+  /// );
+  ///
+  ///
+  /// EXAMPLE 4 — Mixed usage
+  /// ------------------------
+  ///
+  /// await sendFormData(
+  ///   "/upload-all",
+  ///   singleFiles: [avatar],
+  ///   singleFieldName: "avatar",
+  ///   files: {
+  ///     "gallery": [g1, g2, g3],
+  ///     "attachments": [a1, a2],
+  ///   },
+  ///   body: {"description": "Full upload"},
+  /// );
+  ///
+  ///
+  /// EXAMPLE 5 — Body only (no files)
+  /// ---------------------------------
+  ///
+  /// await sendFormData(
+  ///   "/save",
+  ///   body: {"name": "John", "email": "john@mail.com"},
+  /// );
+  ///
+  ///
+  /// EXAMPLE 6 — PUT request
+  /// ------------------------
+  ///
+  /// await sendFormData(
+  ///   "/update",
+  ///   method: FormDataMethod.put,
+  ///   singleFiles: [profileImage],
+  ///   singleFieldName: "profile_image",
+  /// );
+  ///
+  /// ---------------------------------------------------------------------------
+  /// Returns: Dio Response
+  /// ---------------------------------------------------------------------------
   Future<Response> sendFormData(
     String endpoint, {
-    required dynamic body,
-    required List<File?> files,
+    Map<String, List<File?>>? files, // multi-field multi-file
+    List<File?>? singleFiles, // single-field multi-file
+    String singleFieldName = 'image', // default name for singleFiles
+    Map<String, dynamic>? body, // normal fields
     FormDataMethod method = FormDataMethod.post,
-    String fieldName = 'image',
   }) async {
-    try {
-      final filesFiltered = files.where((file) => file != null);
-      List<MultipartFile> multipartFiles = await Future.wait(
-        filesFiltered.map((file) async {
-          String fileName = file?.path.split('/').last ?? '';
-          return await MultipartFile.fromFile(file?.path ?? '',
-              filename: fileName);
-        }),
+    final Map<String, dynamic> fileMap = {};
+
+    /// INTERNAL HELPER
+    /// Converts File -> MultipartFile with automatic MIME detection
+    Future<MultipartFile> toMultipart(File file) async {
+      final fileName = file.path.split('/').last;
+
+      // Detect MIME type (fallback to binary stream)
+      final mime = lookupMimeType(file.path) ?? 'application/octet-stream';
+
+      return MultipartFile.fromFile(
+        file.path,
+        filename: fileName,
+        contentType: MediaType.parse(mime),
       );
-
-      // Siapkan FormData
-      FormData formData = FormData.fromMap({
-        ...?body,
-        fieldName: multipartFiles, // Pastikan ini sesuai dengan API backend
-      });
-
-      return method == FormDataMethod.post
-          ? await _dio.post(endpoint, data: formData)
-          : await _dio.put(endpoint, data: formData);
-    } catch (e) {
-      rethrow;
     }
-  }
 
-  Future<Response> sendFormDataMulti(
-    String endpoint, {
-    required Map<String, List<File?>> files,
-    dynamic body,
-    FormDataMethod method = FormDataMethod.post,
-  }) async {
-    try {
-      final Map<String, dynamic> fileMap = {};
+    // Handle single-field multi-file
+    if (singleFiles != null && singleFiles.isNotEmpty) {
+      final validFiles = singleFiles.where((f) => f != null).toList();
 
+      if (validFiles.isNotEmpty) {
+        final multipartFiles = await Future.wait(
+          validFiles.map((file) => toMultipart(file!)),
+        );
+
+        fileMap[singleFieldName] = multipartFiles;
+      }
+    }
+
+    // Handle multi-field multi-file
+    if (files != null && files.isNotEmpty) {
       for (final entry in files.entries) {
         final key = entry.key;
-        final validFiles = entry.value.where((file) => file != null).toList();
+        final validFiles = entry.value.where((f) => f != null).toList();
+        if (validFiles.isEmpty) continue;
 
-        if (validFiles.isNotEmpty) {
-          List<MultipartFile> multipartFiles = await Future.wait(
-            validFiles.map((file) async {
-              String fileName = file!.path.split('/').last;
-              return await MultipartFile.fromFile(file.path,
-                  filename: fileName);
-            }),
-          );
+        final multipartFiles = await Future.wait(
+          validFiles.map((file) => toMultipart(file!)),
+        );
 
-          fileMap[key] = multipartFiles.length == 1
-              ? multipartFiles.first
-              : multipartFiles;
-        }
+        fileMap[key] = multipartFiles;
       }
-
-      FormData formData = FormData.fromMap({...?body, ...fileMap});
-
-      return method == FormDataMethod.post
-          ? await _dio.post(endpoint, data: formData)
-          : await _dio.put(endpoint, data: formData);
-    } catch (e) {
-      rethrow;
     }
+
+    // Merge body + files into FormData
+    final formData = FormData.fromMap({
+      ...?body,
+      ...fileMap,
+    });
+
+    // Execute HTTP request
+    return method == FormDataMethod.post
+        ? _dio.post(endpoint, data: formData)
+        : _dio.put(endpoint, data: formData);
   }
 
   /// A centralized wrapper for executing API requests and returning a standardized [ApiResult].

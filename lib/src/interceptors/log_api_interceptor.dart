@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:developer' as developer;
 import 'package:dio/dio.dart';
 import 'package:dio_extended/src/interceptors/ansi_color.dart';
+import 'package:flutter/foundation.dart';
 
 /// {@template log_api_interceptor}
 /// Dio interceptor for clean, colorized API logs using `dart:developer.log`.
@@ -30,9 +31,43 @@ class LogApiInterceptor extends Interceptor {
         ..writeln(
             '$requestColor🚀 [REQUEST] ${options.method} ${options.uri} #')
         ..writeln('$requestColor Headers: ${options.headers}');
-      if (options.data != null) {
-        msg.writeln(
-            '$requestColor Body: ${_prettyPrintJson(data: options.data, color: AnsiColor.cyan)}${AnsiColor.reset}');
+
+      try {
+        // --- Detect FormData ---
+        if (options.data is FormData) {
+          final formData = options.data as FormData;
+
+          // Fields
+          final fields = {
+            for (var field in formData.fields) field.key: field.value,
+          };
+
+          // Files metadata only (not actual bytes)
+          final files = formData.files.map((f) {
+            final file = f.value;
+            return {
+              "field": f.key,
+              "filename": file.filename,
+              "contentType": file.contentType.toString(),
+              "length": file.length,
+            };
+          }).toList();
+
+          msg.writeln(
+            '$requestColor Body (FormData): '
+            '${_prettyPrintJson(data: {
+                  "fields": fields,
+                  "files": files
+                }, color: AnsiColor.cyan)}'
+            '${AnsiColor.reset}',
+          );
+        } else if (options.data != null) {
+          msg.writeln(
+            '$requestColor Body: ${_prettyPrintJson(data: options.data, color: AnsiColor.cyan)}${AnsiColor.reset}',
+          );
+        }
+      } catch (e) {
+        debugPrint("Error logging FormData onRequest");
       }
 
       developer.log('$requestColor${msg.toString()}', name: 'DIO-EXTENDED');

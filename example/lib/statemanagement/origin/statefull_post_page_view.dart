@@ -35,11 +35,13 @@ class _StatefullPostPageViewState extends State<StatefullPostPageView> {
 
     if (result.isSuccess) {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Post created successfully!')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Post created successfully!')));
       setState(_loadPosts); // refresh list
     } else {
       // ignore: use_build_context_synchronously
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.message ?? 'Failed to create post')));
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(result.message ?? 'Failed to create post')));
     }
   }
 
@@ -79,7 +81,8 @@ class _StatefullPostPageViewState extends State<StatefullPostPageView> {
           return Center(child: Text(result.message ?? 'Unknown error'));
         },
       ),
-      floatingActionButton: FloatingActionButton(onPressed: _addPost, child: const Icon(Icons.add)),
+      floatingActionButton: FloatingActionButton(
+          onPressed: _addPost, child: const Icon(Icons.add)),
     );
   }
 }
