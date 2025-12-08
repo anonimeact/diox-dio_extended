@@ -1,3 +1,7 @@
+## 1.0.12
+
+- Adjust completer to prevent multiple refresh token request
+
 ## 1.0.11
 
 - Adjust logging form data (multiparts) data delivery
