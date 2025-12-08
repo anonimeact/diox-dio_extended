@@ -73,80 +73,91 @@ class DioInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final status = err.response?.statusCode;
+    if (status != tokenExpiredCode) {
+      return handler.next(err);
+    }
 
-    if (status == tokenExpiredCode) {
-      assert(() {
-        developer.log(
-            '${AnsiColor.magenta} 🔐 Token expired. Refreshing...${AnsiColor.reset}',
-            name: 'DIO-EXTENDED');
-        return true;
-      }());
+    assert(() {
+      developer.log(
+          '${AnsiColor.magenta} 🔐 Token expired. Refreshing...${AnsiColor.reset}',
+          name: 'DIO-EXTENDED');
+      return true;
+    }());
 
-      if (_refreshCompleter != null) {
-        await _refreshCompleter!.future;
-      } else {
-        _refreshCompleter = Completer<void>();
-
-        try {
-          final newHeaders = await refreshTokenCallback();
-          dio.options.headers.addAll(newHeaders);
-          _refreshCompleter!.complete();
-
-          assert(() {
-            developer.log(
-                '${AnsiColor.green} 🔑 Token refreshed successfully${AnsiColor.reset}',
-                name: 'DIO-EXTENDED');
-            return true;
-          }());
-        } catch (e, st) {
-          _refreshCompleter!.completeError(e);
-          developer.log(
-            '${AnsiColor.red} ❌ Token refresh failed: $e${AnsiColor.reset}',
-            name: 'DIO-EXTENDED',
-            level: 1000,
-            error: e,
-            stackTrace: st,
-          );
-          return handler.reject(err);
-        } finally {
-          _refreshCompleter = null;
-        }
-      }
-
+    if (_refreshCompleter != null) {
       try {
-        final req = err.requestOptions;
+        // Waiting refresh token finish when _refreshCompleter != null
+        await _refreshCompleter!.future;
 
-        // Safely duplicate request options with updated headers
-        final RequestOptions newOptions = req.copyWith(
-          headers: {
-            ...req.headers,
-            ...dio.options.headers,
-          },
-        );
-
-        final Response<dynamic> newResponse = await dio.fetch(newOptions);
-
-        assert(() {
-          developer.log(
-            '${AnsiColor.green} 🚀 Retried request successfully after token refresh${AnsiColor.reset}',
-            name: 'DIO-EXTENDED',
-          );
-          return true;
-        }());
-
-        return handler.resolve(newResponse);
-      } catch (e) {
-        developer.log(
-          '${AnsiColor.red} ❌ Retried request failed after token refresh: $e${AnsiColor.reset}',
-          name: 'DIO-EXTENDED',
-          level: 1000,
-        );
-        return handler
-            .reject(DioException(requestOptions: err.requestOptions, error: e));
+        // Retry request when refresh token complete
+        final retryResponse = await _retryRequest(err.requestOptions);
+        return handler.resolve(retryResponse);
+      } catch (_) {
+        // All concurent will failed if refreshing token failed
+        return handler.reject(err);
       }
     }
 
-    handler.next(err);
+    // Init new Completer
+    _refreshCompleter = Completer<void>();
+
+    try {
+      final newHeaders = await refreshTokenCallback();
+      dio.options.headers.addAll(newHeaders);
+      _refreshCompleter!.complete();
+
+      assert(() {
+        developer.log(
+            '${AnsiColor.green} 🔑 Token refreshed successfully${AnsiColor.reset}',
+            name: 'DIO-EXTENDED');
+        return true;
+      }());
+    } catch (e, st) {
+      _refreshCompleter!.completeError(e);
+      developer.log(
+        '${AnsiColor.red} ❌ Token refresh failed: $e${AnsiColor.reset}',
+        name: 'DIO-EXTENDED',
+        level: 1000,
+        error: e,
+        stackTrace: st,
+      );
+      return handler.reject(err);
+    } finally {
+      _refreshCompleter = null;
+    }
+
+    try {
+      // Safely duplicate main request options with updated headers
+      final retryResponse = await _retryRequest(err.requestOptions);
+
+      assert(() {
+        developer.log(
+          '${AnsiColor.green} 🚀 Retried request successfully after token refresh${AnsiColor.reset}',
+          name: 'DIO-EXTENDED',
+        );
+        return true;
+      }());
+
+      return handler.resolve(retryResponse);
+    } catch (e) {
+      developer.log(
+        '${AnsiColor.red} ❌ Retried request failed after token refresh: $e${AnsiColor.reset}',
+        name: 'DIO-EXTENDED',
+        level: 1000,
+      );
+      return handler
+          .reject(DioException(requestOptions: err.requestOptions, error: e));
+    }
+  }
+
+  Future<Response> _retryRequest(RequestOptions req) {
+    final newOptions = req.copyWith(
+      headers: {
+        ...req.headers,
+        ...dio.options.headers,
+      },
+    );
+    return dio.fetch(newOptions);
   }
 }
 
