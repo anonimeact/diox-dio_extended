@@ -1,3 +1,7 @@
+## 1.0.13
+
+- Set headers as async function to support preparing headers using async process
+
 ## 1.0.12
 
 - Adjust completer to prevent multiple refresh token request

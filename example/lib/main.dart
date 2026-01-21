@@ -28,7 +28,7 @@ Press F5 and select the “Run Example App” configuration.
 */
 
 import 'package:dio_extended/diox.dart';
-import 'package:example/statemanagement/origin/statefull_post_page_view.dart';
+import 'package:example/statemanagement/statefull/statefull_post_page_view.dart';
 import 'package:flutter/material.dart';
 
 void main() {

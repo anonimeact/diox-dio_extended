@@ -78,8 +78,7 @@ class DioInterceptor extends Interceptor {
     }
 
     assert(() {
-      developer.log(
-          '${AnsiColor.magenta} 🔐 Token expired. Refreshing...${AnsiColor.reset}',
+      developer.log('${AnsiColor.magenta} 🔐 Token expired. ${AnsiColor.reset}',
           name: 'DIO-EXTENDED');
       return true;
     }());
@@ -102,6 +101,12 @@ class DioInterceptor extends Interceptor {
     _refreshCompleter = Completer<void>();
 
     try {
+      assert(() {
+        developer.log(
+            '${AnsiColor.magenta} 🔐 Refresing token... ${AnsiColor.reset}',
+            name: 'DIO-EXTENDED');
+        return true;
+      }());
       final newHeaders = await refreshTokenCallback();
       dio.options.headers.addAll(newHeaders);
       _refreshCompleter!.complete();

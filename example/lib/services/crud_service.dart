@@ -7,6 +7,7 @@ class CrudService extends DioExtended {
   CrudService()
       : super(
             baseUrl: 'https://jsonplaceholder.typicode.com',
+            headers: _buildAuthHeaders(),
             tokenExpiredCode: 401);
 
   /// Overriding [handleTokenExpired] to fetch new auth key or etc
@@ -18,6 +19,15 @@ class CrudService extends DioExtended {
     /// Send callback as Map
     /// exemple {'Authentication': 'Bearer xxx'}
     return newHeader;
+  }
+
+  static Future<Map<String, String>?> _buildAuthHeaders() async {
+    // Simulasi pengambilan token atau header lain secara asinkron
+    await Future.delayed(Duration(seconds: 3));
+    return {
+      'Authorization': 'Bearer your_token_here',
+      'Custom-Header': 'CustomValue',
+    };
   }
 
   /// Fetches a list of all posts from the API.

@@ -42,18 +42,33 @@ dependencies:
 
 ### Initialization
 
-Set up your API client with a base URL and default headers.
+Set up your API client with a base URL and default headers. The headers are async function, so if your header is static, just using Future.value() to provide the headers.
 
 ```dart
 import 'package:dio_extended/dio_extended.dart';
 
 final api = DioExtended(
   baseUrl: 'https://api.example.com',
-  headers: {
+  headers: Future.value({
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-  },
+  }),
 );
+
+/// if using async
+final api = DioExtended(
+  baseUrl: 'https://api.example.com',
+  headers: _buildAuthHeaders(),
+);
+
+static Future<Map<String, String>?> _buildAuthHeaders() async {
+  // fetch header simulations
+  await Future.delayed(Duration(seconds: 3));
+  return {
+    'Authorization': 'Bearer your_token_here',
+    'Custom-Header': 'CustomValue',
+  };
+}
 
 // You can access the underlying Dio instance directly if needed
 final dioInstance = api.dio;
