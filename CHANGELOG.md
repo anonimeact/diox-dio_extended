@@ -1,3 +1,7 @@
+## 1.0.14
+
+- Add idle callback on ApiResult
+
 ## 1.0.13
 
 - Set headers as async function to support preparing headers using async process

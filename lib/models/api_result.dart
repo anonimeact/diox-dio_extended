@@ -43,6 +43,9 @@ class ApiResult<T> {
   factory ApiResult.failure(String error, {int? statusCode}) =>
       ApiResult._(message: error, statusCode: statusCode);
 
+  /// Set idle state
+  factory ApiResult.idle() => ApiResult._();
+
   // ---------------------------------------------------------------------------
   // 📋 GETTERS
   // ---------------------------------------------------------------------------
