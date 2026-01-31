@@ -81,7 +81,8 @@ class DioExtended {
   /// conditions fail (e.g., no internet connection, DNS failure, or timeout).
   DioExtended({
     required String baseUrl,
-    Future<Map<String, String>?>? headers,
+    Map<String, String>? headers,
+    Future<Map<String, String>?>? headersAsync,
     this.tokenExpiredCode = 401,
     this.timeout = const Duration(minutes: 1),
     this.globalErrorMessage,
@@ -114,7 +115,9 @@ class DioExtended {
 
     // Apply asynchronous headers if provided
     if (headers != null) {
-      headers.then((resolvedHeaders) {
+      _dio.options.headers.addAll(headers);
+    } else if (headersAsync != null) {
+      headersAsync.then((resolvedHeaders) {
         if (resolvedHeaders != null) {
           _dio.options.headers.addAll(resolvedHeaders);
         }

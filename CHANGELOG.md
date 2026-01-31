@@ -1,3 +1,7 @@
+## 1.0.15
+
+- Sparate headers and headersAsync based on needed
+
 ## 1.0.14
 
 - Add idle callback on ApiResult
