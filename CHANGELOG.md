@@ -1,3 +1,7 @@
+## 1.0.16
+
+- Fix retryRequest if request type FormData
+
 ## 1.0.15
 
 - Sparate headers and headersAsync based on needed

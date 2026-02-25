@@ -157,7 +157,7 @@ class LogApiInterceptor extends Interceptor {
 
     final coloredLines = lines.asMap().entries.map((entry) {
       final line = entry.value;
-      // Bungkus baris dengan warna dan kode reset
+      // Wrap each line with color and reset ANSI code.
       return '$color$line${AnsiColor.reset}';
     }).toList();
 

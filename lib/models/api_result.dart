@@ -43,7 +43,7 @@ class ApiResult<T> {
   factory ApiResult.failure(String error, {int? statusCode}) =>
       ApiResult._(message: error, statusCode: statusCode);
 
-  /// Set idle state
+  /// Creates an idle state result.
   factory ApiResult.idle() => ApiResult._();
 
   // ---------------------------------------------------------------------------
@@ -63,7 +63,9 @@ class ApiResult<T> {
   /// Converts this result into a human-readable string for logging/debugging.
   @override
   String toString() {
-    if (isSuccess) () => 'ApiResult.success(status: $statusCode, data: $data)';
+    if (isSuccess) {
+      return 'ApiResult.success(status: $statusCode, data: $data)';
+    }
     return 'ApiResult.failure(status: $statusCode, error: $message)';
   }
 
@@ -71,7 +73,7 @@ class ApiResult<T> {
   /// (for example, mapping DTOs to domain models).
   ApiResult<R> map<R>(R Function(T data) transform) {
     if (isSuccess && data != null) {
-      ApiResult.success(transform(data as T), statusCode: statusCode);
+      return ApiResult.success(transform(data as T), statusCode: statusCode);
     }
     return ApiResult.failure(message ?? 'Unknown error',
         statusCode: statusCode);

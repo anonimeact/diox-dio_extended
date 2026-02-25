@@ -85,25 +85,25 @@ class DioInterceptor extends Interceptor {
 
     if (_refreshCompleter != null) {
       try {
-        // Waiting refresh token finish when _refreshCompleter != null
+        // Wait for the in-flight token refresh to complete.
         await _refreshCompleter!.future;
 
-        // Retry request when refresh token complete
+        // Retry the original request after refresh succeeds.
         final retryResponse = await _retryRequest(err.requestOptions);
         return handler.resolve(retryResponse);
       } catch (_) {
-        // All concurent will failed if refreshing token failed
+        // If refresh fails, all queued requests should fail as well.
         return handler.reject(err);
       }
     }
 
-    // Init new Completer
+    // Create a new completer to queue concurrent requests.
     _refreshCompleter = Completer<void>();
 
     try {
       assert(() {
         developer.log(
-            '${AnsiColor.magenta} 🔐 Refresing token... ${AnsiColor.reset}',
+            '${AnsiColor.magenta} 🔐 Refreshing token... ${AnsiColor.reset}',
             name: 'DIO-EXTENDED');
         return true;
       }());
@@ -132,7 +132,7 @@ class DioInterceptor extends Interceptor {
     }
 
     try {
-      // Safely duplicate main request options with updated headers
+      // Safely duplicate request options with refreshed headers.
       final retryResponse = await _retryRequest(err.requestOptions);
 
       assert(() {
@@ -156,12 +156,22 @@ class DioInterceptor extends Interceptor {
   }
 
   Future<Response> _retryRequest(RequestOptions req) {
+    final isFormData = req.data is FormData;
+    final retryData = isFormData ? (req.data as FormData).clone() : req.data;
+    final retryHeaders = Map<String, dynamic>.from(req.headers)
+      ..addAll(dio.options.headers);
+
+    if (isFormData) {
+      retryHeaders.remove('Content-Type');
+      retryHeaders.remove('content-type');
+    }
+
     final newOptions = req.copyWith(
-      headers: {
-        ...req.headers,
-        ...dio.options.headers,
-      },
+      data: retryData,
+      headers: retryHeaders,
+      contentType: isFormData ? null : req.contentType,
     );
+
     return dio.fetch(newOptions);
   }
 }

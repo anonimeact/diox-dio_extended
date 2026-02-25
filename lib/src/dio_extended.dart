@@ -98,21 +98,6 @@ class DioExtended {
       ),
     );
 
-    // Add debug logging interceptor (only active in debug mode)
-    _dio.interceptors.add(const LogApiInterceptor());
-
-    // Add chucker interceptor
-    _dio.interceptors.add(ChuckerDioInterceptor());
-
-    // Add token refresh interceptor if a callback is provided
-    _dio.interceptors.add(
-      DioInterceptor(
-        dio: _dio,
-        refreshTokenCallback: () async => await handleTokenExpired(),
-        tokenExpiredCode: tokenExpiredCode,
-      ),
-    );
-
     // Apply asynchronous headers if provided
     if (headers != null) {
       _dio.options.headers.addAll(headers);
@@ -123,6 +108,21 @@ class DioExtended {
         }
       });
     }
+
+    // Add token refresh interceptor if a callback is provided
+    _dio.interceptors.add(
+      DioInterceptor(
+        dio: _dio,
+        refreshTokenCallback: () async => await handleTokenExpired(),
+        tokenExpiredCode: tokenExpiredCode,
+      ),
+    );
+
+    // Add debug logging interceptor (only active in debug mode)
+    _dio.interceptors.add(const LogApiInterceptor());
+
+    // Add chucker interceptor
+    _dio.interceptors.add(ChuckerDioInterceptor());
   }
 
   /// Exposes the underlying Dio instance for direct usage if needed.
@@ -157,11 +157,7 @@ class DioExtended {
   /// Throws:
   /// - Any `DioException` (or other exceptions) that occur during the request.
   Future<Response> get(String endpoint, {dynamic query}) async {
-    try {
-      return await _dio.get(endpoint, queryParameters: query);
-    } catch (e) {
-      rethrow;
-    }
+    return _dio.get(endpoint, queryParameters: query);
   }
 
   /// Sends an HTTP POST request to the specified [endpoint].
@@ -198,16 +194,12 @@ class DioExtended {
   /// - Any `DioException` (or other exceptions) that occur during the request.
   Future<Response> post(String endpoint,
       {required dynamic body, dynamic query, dynamic customheader}) async {
-    try {
-      return await _dio.post(
-        endpoint,
-        data: body,
-        queryParameters: query,
-        options: Options(headers: customheader),
-      );
-    } catch (e) {
-      rethrow;
-    }
+    return _dio.post(
+      endpoint,
+      data: body,
+      queryParameters: query,
+      options: Options(headers: customheader),
+    );
   }
 
   /// Sends an HTTP PUT request to the specified [endpoint].
@@ -240,16 +232,12 @@ class DioExtended {
   /// - Any `DioException` (or other exceptions) that occur during the request.
   Future<Response> put(String endpoint,
       {dynamic body, dynamic query, dynamic customheader}) async {
-    try {
-      return await _dio.put(
-        endpoint,
-        data: body,
-        queryParameters: query,
-        options: Options(headers: customheader),
-      );
-    } catch (e) {
-      rethrow;
-    }
+    return _dio.put(
+      endpoint,
+      data: body,
+      queryParameters: query,
+      options: Options(headers: customheader),
+    );
   }
 
   /// Sends an HTTP DELETE request to the specified [endpoint].
@@ -280,11 +268,7 @@ class DioExtended {
   /// - Any `DioException` (or other exceptions) that occur during the request.
   Future<Response> delete(String endpoint,
       {dynamic body, dynamic query}) async {
-    try {
-      return await _dio.delete(endpoint, data: body, queryParameters: query);
-    } catch (e) {
-      rethrow;
-    }
+    return _dio.delete(endpoint, data: body, queryParameters: query);
   }
 
   /// Supports:
@@ -569,8 +553,10 @@ class DioExtended {
     }
 
     if (e.error is SocketException) {
-      return ApiResult.failure(ErrorMessages.globalNetworkError,
-          statusCode: e.response?.statusCode);
+      return ApiResult.failure(
+        globalErrorNetworkingMessage ?? ErrorMessages.globalNetworkError,
+        statusCode: e.response?.statusCode,
+      );
     }
 
     final statusCode = e.response?.statusCode;

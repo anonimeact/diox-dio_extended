@@ -2,7 +2,7 @@ import 'package:dio_extended/diox.dart';
 import 'package:dio_extended/models/api_result.dart';
 import 'package:example/models/post_model.dart';
 
-/// Example service class untuk operasi CRUD post
+/// Example service class for CRUD operations on posts.
 class CrudService extends DioExtended {
   CrudService()
       : super(
@@ -11,14 +11,15 @@ class CrudService extends DioExtended {
             // headersAsync: _buildAuthHeadersAsync(),
             tokenExpiredCode: 401);
 
-  /// Overriding [handleTokenExpired] to fetch new auth key or etc
+  /// Overrides [handleTokenExpired] to fetch a new auth token/header.
   @override
   Future<dynamic> handleTokenExpired() async {
-    /// Chane this line with you functions
-    final newHeader = await Future.delayed(Duration(seconds: 3));
+    /// Replace this with your own refresh-token implementation.
+    final newHeader =
+        await Future.delayed(const Duration(seconds: 3), _buildAuthHeaders);
 
-    /// Send callback as Map
-    /// exemple {'Authentication': 'Bearer xxx'}
+    /// Must return headers as a map.
+    /// Example: {'Authorization': 'Bearer xxx'}
     return newHeader;
   }
 
