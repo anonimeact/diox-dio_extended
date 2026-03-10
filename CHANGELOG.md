@@ -1,3 +1,7 @@
+## 1.0.17
+
+- Fix reset header if for non FormData type request
+
 ## 1.0.16
 
 - Fix retryRequest if request type FormData

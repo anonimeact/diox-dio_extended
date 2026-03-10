@@ -6,6 +6,32 @@ import 'package:test/test.dart';
 
 void main() {
   group('DioInterceptor', () {
+    test('retries JSON request after token refresh', () async {
+      final dio = Dio();
+      final adapter = _QueueAdapter(
+        statusCodes: [401, 200],
+      );
+      dio.httpClientAdapter = adapter;
+
+      dio.interceptors.add(
+        DioInterceptor(
+          dio: dio,
+          tokenExpiredCode: 401,
+          refreshTokenCallback: () async => {
+            'Authorization': 'Bearer new_token',
+          },
+        ),
+      );
+
+      final response = await dio.post<dynamic>(
+        '/posts',
+        data: {'title': 'hello'},
+      );
+
+      expect(response.statusCode, 200);
+      expect(adapter.callCount, 2);
+    });
+
     test('retries FormData request after token refresh', () async {
       final dio = Dio();
       final adapter = _QueueAdapter(

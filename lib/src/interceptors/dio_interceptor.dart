@@ -161,18 +161,32 @@ class DioInterceptor extends Interceptor {
     final retryHeaders = Map<String, dynamic>.from(req.headers)
       ..addAll(dio.options.headers);
 
-    if (isFormData) {
-      retryHeaders.remove('Content-Type');
-      retryHeaders.remove('content-type');
-    }
+    final hasContentTypeInHeader = _removeContentTypeHeader(retryHeaders);
+    final retryContentType =
+        isFormData || hasContentTypeInHeader ? null : req.contentType;
 
     final newOptions = req.copyWith(
       data: retryData,
       headers: retryHeaders,
-      contentType: isFormData ? null : req.contentType,
+      contentType: retryContentType,
     );
 
     return dio.fetch(newOptions);
+  }
+
+  bool _removeContentTypeHeader(Map<String, dynamic> headers) {
+    String? contentTypeKey;
+    for (final key in headers.keys) {
+      if (key.toLowerCase() == Headers.contentTypeHeader) {
+        contentTypeKey = key;
+        break;
+      }
+    }
+    if (contentTypeKey == null) {
+      return false;
+    }
+    headers.remove(contentTypeKey);
+    return true;
   }
 }
 
