@@ -6,6 +6,39 @@ import 'package:test/test.dart';
 
 void main() {
   group('DioInterceptor', () {
+    test('does not refresh repeatedly when retry still returns 401', () async {
+      final dio = Dio();
+      final adapter = _QueueAdapter(
+        statusCodes: [401, 401],
+      );
+      dio.httpClientAdapter = adapter;
+      var refreshCount = 0;
+
+      dio.interceptors.add(
+        DioInterceptor(
+          dio: dio,
+          tokenExpiredCode: 401,
+          refreshTokenCallback: () async {
+            refreshCount += 1;
+            return {
+              'Authorization': 'Bearer new_token',
+            };
+          },
+        ),
+      );
+
+      await expectLater(
+        () => dio.post<dynamic>(
+          '/logout',
+          data: {},
+        ),
+        throwsA(isA<DioException>()),
+      );
+
+      expect(refreshCount, 1);
+      expect(adapter.callCount, 2);
+    });
+
     test('retries JSON request after token refresh', () async {
       final dio = Dio();
       final adapter = _QueueAdapter(

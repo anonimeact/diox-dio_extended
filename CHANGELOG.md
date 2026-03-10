@@ -1,3 +1,8 @@
+## 1.0.18
+
+- Prevent infinite refresh-token loop by allowing only one refresh/retry cycle per request chain
+- Add retry marker guard so requests that still return 401 after retry are not refreshed repeatedly
+
 ## 1.0.17
 
 - Fix reset header if for non FormData type request

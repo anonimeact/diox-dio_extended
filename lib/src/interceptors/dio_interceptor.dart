@@ -17,6 +17,8 @@ import 'package:dio_extended/src/interceptors/ansi_color.dart';
 /// ❌ Failure → red
 /// {@endtemplate}
 class DioInterceptor extends Interceptor {
+  static const String _retryAfterRefreshKey = 'diox_retried_after_refresh';
+
   final Dio dio;
   final TokenRefreshCallback refreshTokenCallback;
   final int tokenExpiredCode;
@@ -74,6 +76,20 @@ class DioInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final status = err.response?.statusCode;
     if (status != tokenExpiredCode) {
+      return handler.next(err);
+    }
+
+    final alreadyRetried =
+        err.requestOptions.extra[_retryAfterRefreshKey] == true;
+    if (alreadyRetried) {
+      assert(() {
+        developer.log(
+          '${AnsiColor.red} ❌ Request still unauthorized after retry. Skipping refresh to prevent loop.${AnsiColor.reset}',
+          name: 'DIO-EXTENDED',
+          level: 1000,
+        );
+        return true;
+      }());
       return handler.next(err);
     }
 
@@ -160,6 +176,8 @@ class DioInterceptor extends Interceptor {
     final retryData = isFormData ? (req.data as FormData).clone() : req.data;
     final retryHeaders = Map<String, dynamic>.from(req.headers)
       ..addAll(dio.options.headers);
+    final retryExtra = Map<String, dynamic>.from(req.extra)
+      ..[_retryAfterRefreshKey] = true;
 
     final hasContentTypeInHeader = _removeContentTypeHeader(retryHeaders);
     final retryContentType =
@@ -168,6 +186,7 @@ class DioInterceptor extends Interceptor {
     final newOptions = req.copyWith(
       data: retryData,
       headers: retryHeaders,
+      extra: retryExtra,
       contentType: retryContentType,
     );
 
