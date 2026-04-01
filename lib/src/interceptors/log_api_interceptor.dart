@@ -151,16 +151,21 @@ class LogApiInterceptor extends Interceptor {
   /// A formatted, colorized JSON string ready for console output.
   String _prettyPrintJson({Object? data, String? color}) {
     if (data == null) return '';
+    final activeColor = color ?? '';
 
-    final jsonString = const JsonEncoder.withIndent('  ').convert(data);
-    final lines = jsonString.split('\n');
+    try {
+      final jsonString = const JsonEncoder.withIndent('  ').convert(data);
+      final lines = jsonString.split('\n');
 
-    final coloredLines = lines.asMap().entries.map((entry) {
-      final line = entry.value;
-      // Wrap each line with color and reset ANSI code.
-      return '$color$line${AnsiColor.reset}';
-    }).toList();
+      final coloredLines = lines.asMap().entries.map((entry) {
+        final line = entry.value;
+        // Wrap each line with color and reset ANSI code.
+        return '$activeColor$line${AnsiColor.reset}';
+      }).toList();
 
-    return coloredLines.join('\n');
+      return coloredLines.join('\n');
+    } catch (_) {
+      return '$activeColor${data.toString()}${AnsiColor.reset}';
+    }
   }
 }

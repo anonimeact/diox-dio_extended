@@ -30,7 +30,7 @@ Add `dio_extended` to your `pubspec.yaml` file. We'll use `latest` to always get
 
 ```yaml
 dependencies:
-  dio_extended: ^latest
+  dio_extended: ^1.0.19
 ```
 
 > **Note**: 
@@ -120,6 +120,10 @@ Using *callApiRequest* will make us easier to fetch and parsing with the result 
 ### Token Refresh (Optional)
 
 To handle automatic token refresh, just overriding `handleTokenExpired` . The library will automatically use this callback when a request fails with a 401 status code (or you can set other code with `tokenExpiredCode`) and then retry the original request.
+
+Notes:
+- The interceptor now safely separates `Content-Type` behavior for `FormData` and non-`FormData` requests, including on retry.
+- In `handleTokenExpired`, return auth-related headers only (for example `Authorization`) and avoid setting global `Content-Type` from refresh headers.
 
 ```dart
 class CrudService extends DioExtended {

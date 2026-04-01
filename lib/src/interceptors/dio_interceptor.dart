@@ -18,6 +18,10 @@ import 'package:dio_extended/src/interceptors/ansi_color.dart';
 /// {@endtemplate}
 class DioInterceptor extends Interceptor {
   static const String _retryAfterRefreshKey = 'diox_retried_after_refresh';
+  static const String skipRefreshExtraKey = 'diox_skip_refresh';
+  static const String _internalRefreshRequestKey =
+      'diox_internal_refresh_request';
+  static final Object _refreshZoneKey = Object();
 
   final Dio dio;
   final TokenRefreshCallback refreshTokenCallback;
@@ -53,11 +57,19 @@ class DioInterceptor extends Interceptor {
   /// which occur when multipart requests accidentally inherit a JSON Content-Type.
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    if (Zone.current[_refreshZoneKey] == true) {
+      options.extra[_internalRefreshRequestKey] = true;
+    }
+
     if (options.data is FormData) {
-      options.headers.remove('Content-Type');
+      _removeContentTypeHeader(options.headers);
       options.contentType = null;
     } else {
-      options.contentType = Headers.jsonContentType;
+      final hasContentTypeInHeader = _hasContentTypeHeader(options.headers);
+      final hasExplicitContentType = options.contentType != null;
+      if (!hasContentTypeInHeader && !hasExplicitContentType) {
+        options.contentType = Headers.jsonContentType;
+      }
     }
     handler.next(options);
   }
@@ -76,6 +88,13 @@ class DioInterceptor extends Interceptor {
   void onError(DioException err, ErrorInterceptorHandler handler) async {
     final status = err.response?.statusCode;
     if (status != tokenExpiredCode) {
+      return handler.next(err);
+    }
+
+    final shouldSkipRefresh =
+        err.requestOptions.extra[skipRefreshExtraKey] == true ||
+            err.requestOptions.extra[_internalRefreshRequestKey] == true;
+    if (shouldSkipRefresh) {
       return handler.next(err);
     }
 
@@ -114,7 +133,9 @@ class DioInterceptor extends Interceptor {
     }
 
     // Create a new completer to queue concurrent requests.
-    _refreshCompleter = Completer<void>();
+    _refreshCompleter = Completer<void>()
+      // Prevent unhandled async error when no queued request is awaiting.
+      ..future.catchError((_) {});
 
     try {
       assert(() {
@@ -123,7 +144,10 @@ class DioInterceptor extends Interceptor {
             name: 'DIO-EXTENDED');
         return true;
       }());
-      final newHeaders = await refreshTokenCallback();
+      final newHeaders = await runZoned<Future<Map<String, dynamic>>>(
+        () => refreshTokenCallback(),
+        zoneValues: {_refreshZoneKey: true},
+      );
       dio.options.headers.addAll(newHeaders);
       _refreshCompleter!.complete();
 
@@ -178,10 +202,14 @@ class DioInterceptor extends Interceptor {
       ..addAll(dio.options.headers);
     final retryExtra = Map<String, dynamic>.from(req.extra)
       ..[_retryAfterRefreshKey] = true;
-
-    final hasContentTypeInHeader = _removeContentTypeHeader(retryHeaders);
-    final retryContentType =
-        isFormData || hasContentTypeInHeader ? null : req.contentType;
+    String? retryContentType = req.contentType;
+    if (isFormData) {
+      _removeContentTypeHeader(retryHeaders);
+      retryContentType = null;
+    } else if (retryContentType != null) {
+      // Avoid duplicate content-type definitions when contentType is explicit.
+      _removeContentTypeHeader(retryHeaders);
+    }
 
     final newOptions = req.copyWith(
       data: retryData,
@@ -206,6 +234,15 @@ class DioInterceptor extends Interceptor {
     }
     headers.remove(contentTypeKey);
     return true;
+  }
+
+  bool _hasContentTypeHeader(Map<String, dynamic> headers) {
+    for (final key in headers.keys) {
+      if (key.toLowerCase() == Headers.contentTypeHeader) {
+        return true;
+      }
+    }
+    return false;
   }
 }
 

@@ -1,3 +1,11 @@
+## 1.0.19
+
+- Improve `Content-Type` handling between `FormData` and non-`FormData` requests to avoid cross-request header conflicts
+- Preserve custom non-JSON `Content-Type` on retry (for example `text/plain` or `application/x-www-form-urlencoded`)
+- Prevent refresh deadlock risk when refresh flow uses the same `Dio` instance
+- Harden refresh completer error handling to avoid unhandled async errors
+- Make debug logging safer when response data is not JSON-encodable
+
 ## 1.0.18
 
 - Prevent infinite refresh-token loop by allowing only one refresh/retry cycle per request chain
