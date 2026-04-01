@@ -40,7 +40,8 @@ void main() {
       expect(effectiveContentType, isNot(contains('application/json')));
     });
 
-    test('does not leak FormData content-type into next JSON request', () async {
+    test('does not leak FormData content-type into next JSON request',
+        () async {
       final dio = Dio();
       final adapter = _QueueAdapter(
         statusCodes: [200, 200],
@@ -102,12 +103,10 @@ void main() {
       );
 
       await expectLater(
-        () => dio
-            .post<dynamic>(
-              '/logout',
-              data: {},
-            )
-            .timeout(const Duration(seconds: 2)),
+        () => dio.post<dynamic>(
+          '/logout',
+          data: {},
+        ).timeout(const Duration(seconds: 2)),
         throwsA(isA<DioException>()),
       );
 
