@@ -28,16 +28,33 @@ class ApiResult<T> {
   /// The HTTP status code of the API response (if available).
   final int? statusCode;
 
+  /// Whether this result represents a successful response.
+  ///
+  /// This flag is set explicitly at construction time rather than being
+  /// inferred from [data]. This means a successful response is still
+  /// considered successful even when its [data] is `null` (e.g. an HTTP
+  /// `204 No Content` response or an endpoint that legitimately returns
+  /// an empty body).
+  final bool _isSuccess;
+
   /// Private constructor — use the factory constructors instead.
-  const ApiResult._({this.data, this.message, this.statusCode});
+  const ApiResult._({
+    this.data,
+    this.message,
+    this.statusCode,
+    bool isSuccess = false,
+  }) : _isSuccess = isSuccess;
 
   // ---------------------------------------------------------------------------
   // 🟢 FACTORY CONSTRUCTORS
   // ---------------------------------------------------------------------------
 
   /// Creates a successful API result containing [data].
-  factory ApiResult.success(T data, {int? statusCode}) =>
-      ApiResult._(data: data, statusCode: statusCode);
+  ///
+  /// [data] may be `null` for responses that carry no body (for example a
+  /// `204 No Content` response or an `ApiResult<void>`).
+  factory ApiResult.success(T? data, {int? statusCode}) =>
+      ApiResult._(data: data, statusCode: statusCode, isSuccess: true);
 
   /// Creates a failed API result with an [error] message.
   factory ApiResult.failure(String error, {int? statusCode}) =>
@@ -50,11 +67,19 @@ class ApiResult<T> {
   // 📋 GETTERS
   // ---------------------------------------------------------------------------
 
-  /// Returns `true` if the result contains data.
-  bool get isSuccess => data != null;
+  /// Returns `true` if the request completed successfully.
+  ///
+  /// Unlike previous versions, this no longer depends on [data] being
+  /// non-null, so successful responses with an empty body are reported
+  /// correctly.
+  bool get isSuccess => _isSuccess;
 
-  /// Returns `true` if there is an error message.
-  bool get isFailure => message != null;
+  /// Returns `true` if the request failed.
+  bool get isFailure => !_isSuccess && message != null;
+
+  /// Returns `true` if this result is in its initial idle state
+  /// (neither a success nor a failure).
+  bool get isIdle => !_isSuccess && message == null;
 
   // ---------------------------------------------------------------------------
   // 🧭 UTILITIES
@@ -66,13 +91,16 @@ class ApiResult<T> {
     if (isSuccess) {
       return 'ApiResult.success(status: $statusCode, data: $data)';
     }
+    if (isIdle) {
+      return 'ApiResult.idle()';
+    }
     return 'ApiResult.failure(status: $statusCode, error: $message)';
   }
 
   /// Convenience method to transform the `data` field
   /// (for example, mapping DTOs to domain models).
   ApiResult<R> map<R>(R Function(T data) transform) {
-    if (isSuccess && data != null) {
+    if (isSuccess) {
       return ApiResult.success(transform(data as T), statusCode: statusCode);
     }
     return ApiResult.failure(message ?? 'Unknown error',

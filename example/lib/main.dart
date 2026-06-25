@@ -43,9 +43,7 @@ void main() {
         debugShowCheckedModeBanner: false,
         theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.blue),
         home: const StatefullPostPageView(),
-        navigatorObservers: [
-          ShakeChuckerConfigs.navigatorObserver,
-        ],
+        navigatorKey: ShakeChuckerConfigs.navigatorKey,
       ),
     ),
   );

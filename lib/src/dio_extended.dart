@@ -1,5 +1,6 @@
 // ignore_for_file: unintended_html_in_doc_comment
 
+import 'dart:async';
 import 'dart:io';
 
 import 'package:chucker_flutter/chucker_flutter.dart';
@@ -492,6 +493,13 @@ class DioExtended {
       return _processResponse(response, decoder: parseData);
     } on DioException catch (e) {
       return _handleDioError(e);
+    } on TimeoutException {
+      return ApiResult.failure(
+        globalErrorNetworkingMessage ?? 'Request timeout',
+      );
+    } catch (e) {
+      debugPrint('Unexpected error during API request: $e');
+      return ApiResult.failure(globalErrorMessage ?? ErrorMessages.globalError);
     }
   }
 
@@ -521,7 +529,7 @@ class DioExtended {
       try {
         final body = response.data;
         final decoded = decoder != null ? decoder(body) : body as T?;
-        return ApiResult.success(decoded as T, statusCode: status);
+        return ApiResult.success(decoded, statusCode: status);
       } catch (e) {
         debugPrint('Failed to decode response: $e');
         return ApiResult.failure('Failed to decode response: $e',

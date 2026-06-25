@@ -1,52 +1,114 @@
-# DioExtended
+<div align="center">
 
-`DioExtended` is a thin wrapper over the `dio` HTTP client that simplifies networking in Flutter. It provides a clean, result-based API (`ApiResult<T>`) for handling requests and responses, reducing boilerplate and making your code more robust.
+# 🚀 DioExtended
 
-This package also includes `ShakeForChucker`, a developer helper that allows you to instantly open the Chucker network inspector just by shaking your device.
+### A thin, result-based wrapper over [`dio`](https://pub.dev/packages/dio) that makes networking in Flutter clean, safe, and boilerplate-free.
 
-## Table of Contents
+<br/>
 
-- [Features](#features)
-- [Installation](#installation)
-- [DioExtended: Simplified Networking](#dioextended-simplified-networking)
-    - [Initialization](#initialization)
-    - [GET Request Example](#get-request-example)
-    - [Token Refresh (Optional)](#token-refresh-optional)
-- [ShakeForChucker: Debug with a Shake](#shakeforchucker-debug-with-a-shake)
-    - [Setup](#setup-1)
+[![pub version](https://img.shields.io/pub/v/dio_extended.svg?style=for-the-badge&logo=dart&color=0175C2)](https://pub.dev/packages/dio_extended)
+[![pub points](https://img.shields.io/pub/points/dio_extended?style=for-the-badge&logo=flutter&color=02569B)](https://pub.dev/packages/dio_extended/score)
+[![license](https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge)](LICENSE)
+[![platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-blueviolet?style=for-the-badge)](https://pub.dev/packages/dio_extended)
+
+<br/>
+
+`DioExtended` returns a consistent **`ApiResult<T>`** for every request, so error handling and JSON parsing stay simple and predictable. It also ships with **`ShakeForChucker`** — shake your device to instantly open the Chucker network inspector.
+
+</div>
 
 ---
 
-## Features
+## 📑 Table of Contents
 
--   **Simplified API**: Handles requests and responses through a clean `ApiResult<T>` interface.
--   **Automatic JSON Parsing**: Easily decode responses to your model objects with a simple `decoder` function.
--   **Built-in Token Refresh**: Provides a callback mechanism to automatically handle authentication token expiration and retry requests.
--   **Shake for Debugging**: Integrate `ShakeForChucker` to open the network inspector with a simple gesture, perfect for development and QA.
+| Section | Description |
+| :--- | :--- |
+| [✨ Features](#-features) | What you get out of the box |
+| [📦 Installation](#-installation) | Add the package to your project |
+| [⚡ Quick Start](#-quick-start) | Up and running in 30 seconds |
+| [🌐 DioExtended](#-dioextended-simplified-networking) | The core networking client |
+| [🔐 Token Refresh](#-token-refresh-optional) | Automatic 401 handling |
+| [📳 ShakeForChucker](#-shakeforchucker-debug-with-a-shake) | Debug by shaking your phone |
+| [❓ FAQ](#-faq) | Common questions answered |
 
-## Installation
+---
 
-Add `dio_extended` to your `pubspec.yaml` file. We'll use `latest` to always get the newest version.
+## ✨ Features
+
+| | Feature | Description |
+| :---: | :--- | :--- |
+| 🧩 | **Simplified API** | Every call returns a clean, typed `ApiResult<T>` interface. |
+| 🔄 | **Automatic JSON Parsing** | Decode responses into your models with a simple `parseData` function. |
+| 🔐 | **Built-in Token Refresh** | Override one method to auto-handle expired tokens and retry requests. |
+| 📳 | **Shake for Debugging** | Open the network inspector with a shake gesture — perfect for QA. |
+| 🧱 | **FormData Safe** | Correctly separates `Content-Type` handling for `FormData` vs JSON, even on retry. |
+
+---
+
+## 📦 Installation
+
+Add `dio_extended` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dio_extended: ^1.0.19
+  dio_extended: ^1.0.20
 ```
 
-> **Note**: 
-> - The versions for `chucker_flutter` and `shake` are examples. Use the versions compatible with your project.
+Then run:
 
-## DioExtended: Simplified Networking
+```bash
+flutter pub get
+```
+
+> [!NOTE]
+> `chucker_flutter` and `shake` are bundled as dependencies — no need to add them separately.
+
+---
+
+## ⚡ Quick Start
+
+```dart
+import 'package:dio_extended/diox.dart';
+
+class CrudService extends DioExtended {
+  CrudService() : super(baseUrl: 'https://jsonplaceholder.typicode.com');
+
+  Future<ApiResult<List<PostModel>>> getPosts() {
+    return callApiRequest<List<PostModel>>(
+      request: () => get('/posts'),
+      parseData: (data) =>
+          (data as List).map((e) => PostModel.fromJson(e)).toList(),
+    );
+  }
+}
+
+// ...
+
+final result = await CrudService().getPosts();
+if (result.isSuccess) {
+  print(result.data); // 🎉 Typed list of PostModel
+} else {
+  print(result.message); // ⚠️ Friendly error message
+}
+```
+
+---
+
+## 🌐 DioExtended: Simplified Networking
 
 `DioExtended` is the core of this package. It streamlines HTTP requests and returns a consistent `ApiResult<T>` object for all calls, making error handling and data parsing straightforward.
 
-### Initialization
+<details open>
+<summary><b>🔧 Initialization</b></summary>
 
-Set up your API client with a base URL and default headers. The headers are async function, so if your header is static, just using Future.value() to provide the headers.
+<br/>
+
+Set up your API client with a base URL and default headers. Headers are an async `Future`, so for static headers simply wrap them in `Future.value()`.
 
 ```dart
-import 'package:dio_extended/dio_extended.dart';
+import 'package:dio_extended/diox.dart';
 
+// Static headers
 final api = DioExtended(
   baseUrl: 'https://api.example.com',
   headers: Future.value({
@@ -55,110 +117,120 @@ final api = DioExtended(
   }),
 );
 
-/// if using async
+// Async headers (e.g. fetched from secure storage)
 final api = DioExtended(
   baseUrl: 'https://api.example.com',
   headers: _buildAuthHeaders(),
 );
 
 static Future<Map<String, String>?> _buildAuthHeaders() async {
-  // fetch header simulations
-  await Future.delayed(Duration(seconds: 3));
+  await Future.delayed(const Duration(seconds: 3)); // fetch simulation
   return {
     'Authorization': 'Bearer your_token_here',
     'Custom-Header': 'CustomValue',
   };
 }
 
-// You can access the underlying Dio instance directly if needed
+// Access the underlying Dio instance directly when needed
 final dioInstance = api.dio;
 ```
-If you want to create independent service, just do this on our class:
-```
+
+Prefer a dedicated, independent service? Just extend `DioExtended`:
+
+```dart
 class CrudService extends DioExtended {
   CrudService() : super(baseUrl: 'YOUR-BASE-URL');
-  /// Here you can use all function from DioExtend
-  /// examples of its use are available ini Request Exampel 
+  // All DioExtended functions are now available here.
 }
 ```
 
-### GET Request Example
+</details>
 
-Making a GET request is simple. Provide a decoder function to parse the JSON response into your model object.
+<details>
+<summary><b>📥 GET Request Example</b></summary>
+
+<br/>
+
+Provide a `parseData` function to map the JSON response into your model.
 
 ```dart
-  /// Fetches a list of all posts from the API.
-  ///
-  /// Returns an [ApiResult] containing a list of [PostModel] objects on success,
-  /// or an error message on failure.
-  Future<ApiResult<List<PostModel>>> getPosts() async {
-    return await callApiRequest<List<PostModel>>(
-      request: () => get('/posts'),
-      parseData: (data) => (data as List)
-          .map((itemJson) => PostModel.fromJson(itemJson))
-          .toList(),
-    );
-  }
-	
-  /// Example for single model
-  Future<ApiResult<PostModel>> getPosts() async {
-    return await callApiRequest<List<PostModel>>(
-      request: () => get('/posts'),
-      parseData: (data) => PostModel.fromJson(itemJson)
-    );
-  }
+/// Returns an [ApiResult] with a list of [PostModel] on success.
+Future<ApiResult<List<PostModel>>> getPosts() async {
+  return await callApiRequest<List<PostModel>>(
+    request: () => get('/posts'),
+    parseData: (data) => (data as List)
+        .map((itemJson) => PostModel.fromJson(itemJson))
+        .toList(),
+  );
+}
+
+/// Single-object variant.
+Future<ApiResult<PostModel>> getPost() async {
+  return await callApiRequest<PostModel>(
+    request: () => get('/posts/1'),
+    parseData: (data) => PostModel.fromJson(data),
+  );
+}
 ```
-Using *callApiRequest* will make us easier to fetch and parsing with the result model. In controller side (business logic), you can checking the result just using isSuccess or not.
 
-    ```
-	    final result = await _service.getPost();
-	    if (result.isSuccess) {
-			   /// Your logic here
-	    }
-    ```
+Using `callApiRequest` handles fetching **and** parsing. On the business-logic side, just check `isSuccess`:
 
-### Token Refresh (Optional)
+```dart
+final result = await _service.getPosts();
+if (result.isSuccess) {
+  // ✅ Your logic here — result.data is fully typed
+}
+```
 
-To handle automatic token refresh, just overriding `handleTokenExpired` . The library will automatically use this callback when a request fails with a 401 status code (or you can set other code with `tokenExpiredCode`) and then retry the original request.
+</details>
 
-Notes:
-- The interceptor now safely separates `Content-Type` behavior for `FormData` and non-`FormData` requests, including on retry.
-- In `handleTokenExpired`, return auth-related headers only (for example `Authorization`) and avoid setting global `Content-Type` from refresh headers.
+---
+
+## 🔐 Token Refresh (Optional)
+
+To handle automatic token refresh, simply override `handleTokenExpired`. The library calls this callback when a request fails with a `401` status (or a custom code via `tokenExpiredCode`), then retries the original request.
+
+> [!TIP]
+> - The interceptor safely separates `Content-Type` behavior for `FormData` and non-`FormData` requests, including on retry.
+> - In `handleTokenExpired`, return **auth-related headers only** (e.g. `Authorization`). Avoid setting a global `Content-Type` from refresh headers.
 
 ```dart
 class CrudService extends DioExtended {
-  CrudService() : super(baseUrl: 'https://jsonplaceholder.typicode.com', tokenExpiredCode:  401);
+  CrudService()
+      : super(
+          baseUrl: 'https://jsonplaceholder.typicode.com',
+          tokenExpiredCode: 401,
+        );
 
-  /// Overriding [handleTokenExpired] to fetch new auth key or etc
+  /// Override to fetch a new auth token when the current one expires.
   @override
   Future<dynamic> handleTokenExpired() async {
-    final newHeader = await fetchNewAutn();
-
-    /// Send callback as Map
-    /// exemple {'Authentication': 'Bearer xxx'}
+    final newHeader = await fetchNewAuth();
+    // Return as a Map, e.g. {'Authorization': 'Bearer xxx'}
     return newHeader;
   }
- }
+}
 ```
-#
 
-## ShakeForChucker: Debug with a Shake
+---
 
-`ShakeForChucker` is a convenient utility for developers and QA testers. It integrates with the `chucker_flutter` package to open the network inspection UI when you shake the device.
+## 📳 ShakeForChucker: Debug with a Shake
 
-### Setup
+`ShakeForChucker` integrates with [`chucker_flutter`](https://pub.dev/packages/chucker_flutter) to open the network inspection UI whenever you shake the device — ideal for developers and QA testers.
 
-Wrap your `MaterialApp` with the `ShakeForChucker` widget. Make sure to also add `ChuckerFlutter.navigatorObserver` to your app.
+<details open>
+<summary><b>⚙️ Setup</b></summary>
+
+<br/>
+
+Wrap your `MaterialApp` with `ShakeForChucker`, and attach `ShakeChuckerConfigs.navigatorKey` to your app's `navigatorKey`.
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:chucker_flutter/chucker_flutter.dart';
-import 'package:dio_extended/src/chucker/shake_for_chucker.dart'; // Import path for ShakeForChucker
+import 'package:dio_extended/diox.dart';
 
 void main() {
-
-  // Init chucker configs
-  // Do this before runApp
+  // Initialize Chucker BEFORE runApp().
   ShakeChuckerConfigs.initialize(
     showOnRelease: true,
     showNotification: true,
@@ -166,18 +238,61 @@ void main() {
 
   runApp(
     ShakeForChucker(
-      // Number of shakes needed to trigger Chucker (default is 3)
-      shakeCountTriggered: 3, 
-
+      // Number of shakes needed to trigger Chucker (default: 3)
+      shakeCountTriggered: 3,
       child: MaterialApp(
         title: 'DioExtended Demo',
-        // This observer is required for Chucker to work correctly
-        navigatorObservers: [
-          ShakeChuckerConfigs.navigatorObserver,
-        ],
+        // Required so Chucker can show its inspector reliably.
+        navigatorKey: ShakeChuckerConfigs.navigatorKey,
         home: const MyHomePage(),
       ),
     ),
   );
 }
 ```
+
+> [!IMPORTANT]
+> The older `navigatorObservers: [ShakeChuckerConfigs.navigatorObserver]` approach is now **deprecated**. Use `navigatorKey` instead — it works reliably even with nested navigators.
+
+</details>
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><b>What does <code>callApiRequest</code> return on error?</b></summary>
+
+<br/>
+
+It returns an `ApiResult<T>` with `isSuccess == false` and a human-readable `message`. No exceptions are thrown for expected network/HTTP failures, so you can branch safely on `isSuccess`.
+
+</details>
+
+<details>
+<summary><b>Can I still access the raw Dio instance?</b></summary>
+
+<br/>
+
+Yes. Every `DioExtended` exposes the underlying client via `api.dio`, so you can add interceptors, configure timeouts, or call advanced Dio APIs directly.
+
+</details>
+
+<details>
+<summary><b>Does Chucker run in release builds?</b></summary>
+
+<br/>
+
+Only if you opt in. Set `showOnRelease: true` in `ShakeChuckerConfigs.initialize(...)`. By default Chucker is intended for debug/QA usage.
+
+</details>
+
+---
+
+<div align="center">
+
+Made with ❤️ for the Flutter community.
+
+⭐ If this package helps you, consider starring the [repository](https://github.com/anonimeact/diox-dio_extended)!
+
+</div>

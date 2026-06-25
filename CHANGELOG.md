@@ -1,3 +1,14 @@
+## 1.0.20
+
+- Fix `ApiResult.isSuccess` to use an explicit success flag instead of inferring from `data != null`, so successful responses with an empty body (e.g. `204 No Content` or `ApiResult<void>`) are no longer reported as failures
+- Add `ApiResult.isIdle` getter and improve `toString()` for the idle state
+- Allow `ApiResult.success` to accept `null` data and stop `callApiRequest` from throwing on successful responses with a null/empty body
+- Handle `TimeoutException` (and other unexpected errors) in `callApiRequest` so the optional `timeout` no longer escapes as an unhandled exception
+- Migrate Chucker integration from the deprecated `navigatorObserver` to `navigatorKey` (`ShakeChuckerConfigs.navigatorKey`) for reliable wiring with nested navigators
+- Deprecate `ShakeChuckerConfigs.navigatorObserver` (kept for backward compatibility)
+- Update dependencies to the latest compatible versions and refresh the example app
+- Revamp README with a richer, more interactive layout (badges, tables, collapsible sections)
+
 ## 1.0.19
 
 - Improve `Content-Type` handling between `FormData` and non-`FormData` requests to avoid cross-request header conflicts

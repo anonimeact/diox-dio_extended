@@ -36,14 +36,12 @@ import 'package:shake/shake.dart';
 /// ```
 ///
 /// ⚠️ Important setup:
-/// To fully integrate Chucker, make sure to add its `navigatorObserver`
+/// To fully integrate Chucker, make sure to attach its `navigatorKey`
 /// to your MaterialApp:
 ///
 /// ```dart
 /// MaterialApp(
-///   navigatorObservers: [
-///     ChuckerFlutter.navigatorObserver,
-///   ],
+///   navigatorKey: ShakeChuckerConfigs.navigatorKey,
 ///   ...
 /// )
 /// ```

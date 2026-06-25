@@ -1,10 +1,54 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
+import 'package:dio_extended/models/api_result.dart';
 import 'package:dio_extended/src/interceptors/dio_interceptor.dart';
 import 'package:test/test.dart';
 
 void main() {
+  group('ApiResult', () {
+    test('success with non-null data is reported as success', () {
+      final result = ApiResult.success(42, statusCode: 200);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.isFailure, isFalse);
+      expect(result.isIdle, isFalse);
+      expect(result.data, 42);
+    });
+
+    test('success with null data (e.g. 204) is still a success', () {
+      final result = ApiResult<String>.success(null, statusCode: 204);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.isFailure, isFalse);
+      expect(result.data, isNull);
+    });
+
+    test('failure is not treated as success', () {
+      final result = ApiResult<int>.failure('boom', statusCode: 500);
+
+      expect(result.isSuccess, isFalse);
+      expect(result.isFailure, isTrue);
+      expect(result.isIdle, isFalse);
+      expect(result.message, 'boom');
+    });
+
+    test('idle is neither success nor failure', () {
+      final result = ApiResult<int>.idle();
+
+      expect(result.isSuccess, isFalse);
+      expect(result.isFailure, isFalse);
+      expect(result.isIdle, isTrue);
+    });
+
+    test('map transforms data while preserving success state', () {
+      final result = ApiResult.success(2, statusCode: 200).map((v) => v * 10);
+
+      expect(result.isSuccess, isTrue);
+      expect(result.data, 20);
+    });
+  });
+
   group('DioInterceptor', () {
     test('keeps custom content-type on retry for non-FormData', () async {
       final dio = Dio();

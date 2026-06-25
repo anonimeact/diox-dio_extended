@@ -26,20 +26,32 @@ import 'package:flutter/material.dart';
 ///
 /// ```dart
 /// MaterialApp(
-///   navigatorObservers: [
-///     ShakeChuckerConfigs.navigatorObserver,
-///   ],
+///   navigatorKey: ShakeChuckerConfigs.navigatorKey,
 /// );
 /// ```
 ///
 /// This ensures that Chucker is properly initialized before
 /// `runApp()` and captures navigation history.
 class ShakeChuckerConfigs {
+  /// Returns the `GlobalKey<NavigatorState>` used by Chucker to display
+  /// its inspector UI and notification overlay.
+  ///
+  /// Attach this to your root `MaterialApp.navigatorKey`. This is the
+  /// recommended way to wire Chucker, as it works reliably even with
+  /// nested navigators.
+  static GlobalKey<NavigatorState> get navigatorKey =>
+      ChuckerFlutter.navigatorKey;
+
   /// Returns the `NavigatorObserver` used by Chucker to log navigation
   /// events for inspection inside the Chucker UI.
   ///
   /// Attach this to your `MaterialApp.navigatorObservers` list.
+  @Deprecated(
+    'Use ShakeChuckerConfigs.navigatorKey on MaterialApp.navigatorKey '
+    'instead. Observer-based wiring is unreliable with nested Navigators.',
+  )
   static NavigatorObserver get navigatorObserver =>
+      // ignore: deprecated_member_use
       ChuckerFlutter.navigatorObserver;
 
   /// Initializes Chucker configuration.
