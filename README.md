@@ -9,11 +9,11 @@
 [![pub version](https://img.shields.io/pub/v/dio_extended.svg?style=for-the-badge&logo=dart&color=0175C2)](https://pub.dev/packages/dio_extended)
 [![pub points](https://img.shields.io/pub/points/dio_extended?style=for-the-badge&logo=flutter&color=02569B)](https://pub.dev/packages/dio_extended/score)
 [![license](https://img.shields.io/badge/License-MIT-success.svg?style=for-the-badge)](LICENSE)
-[![platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web-blueviolet?style=for-the-badge)](https://pub.dev/packages/dio_extended)
+[![platform](https://img.shields.io/badge/Platform-Android%20%7C%20iOS%20%7C%20Web%20%7C%20Windows%20%7C%20macOS%20%7C%20Linux-blueviolet?style=for-the-badge)](https://pub.dev/packages/dio_extended)
 
 <br/>
 
-`DioExtended` returns a consistent **`ApiResult<T>`** for every request, so error handling and JSON parsing stay simple and predictable. It also ships with **`ShakeForChucker`** — shake your device to instantly open the Chucker network inspector.
+`DioExtended` returns a consistent **`ApiResult<T>`** for every request, so error handling and JSON parsing stay simple and predictable. Optional Chucker helpers are exposed from a separate import so the core package stays platform-neutral.
 
 </div>
 
@@ -51,7 +51,7 @@ Add `dio_extended` to your `pubspec.yaml`:
 
 ```yaml
 dependencies:
-  dio_extended: ^1.0.20
+  dio_extended: ^2.0.0
 ```
 
 Then run:
@@ -61,7 +61,10 @@ flutter pub get
 ```
 
 > [!NOTE]
-> `chucker_flutter` and `shake` are bundled as dependencies — no need to add them separately.
+> Chucker helpers are available from `package:dio_extended/diox_chucker.dart`.
+
+> [!IMPORTANT]
+> Since `2.0.0`, Chucker APIs are no longer exported from `package:dio_extended/diox.dart`. If you use `ShakeForChucker`, `ShakeChuckerConfigs`, or `createChuckerInterceptor()`, add a separate import for `package:dio_extended/diox_chucker.dart`.
 
 ---
 
@@ -103,7 +106,7 @@ if (result.isSuccess) {
 
 <br/>
 
-Set up your API client with a base URL and default headers. Headers are an async `Future`, so for static headers simply wrap them in `Future.value()`.
+Set up your API client with a base URL and default headers. Use `headers` for synchronous values and `headersAsync` when headers need async preparation.
 
 ```dart
 import 'package:dio_extended/diox.dart';
@@ -111,16 +114,16 @@ import 'package:dio_extended/diox.dart';
 // Static headers
 final api = DioExtended(
   baseUrl: 'https://api.example.com',
-  headers: Future.value({
+  headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
-  }),
+  },
 );
 
 // Async headers (e.g. fetched from secure storage)
 final api = DioExtended(
   baseUrl: 'https://api.example.com',
-  headers: _buildAuthHeaders(),
+  headersAsync: _buildAuthHeaders(),
 );
 
 static Future<Map<String, String>?> _buildAuthHeaders() async {
@@ -227,7 +230,7 @@ Wrap your `MaterialApp` with `ShakeForChucker`, and attach `ShakeChuckerConfigs.
 
 ```dart
 import 'package:flutter/material.dart';
-import 'package:dio_extended/diox.dart';
+import 'package:dio_extended/diox_chucker.dart';
 
 void main() {
   // Initialize Chucker BEFORE runApp().
@@ -249,6 +252,18 @@ void main() {
     ),
   );
 }
+```
+
+If you also want requests from `DioExtended` to appear in Chucker, register the optional interceptor:
+
+```dart
+import 'package:dio_extended/diox.dart';
+import 'package:dio_extended/diox_chucker.dart';
+
+final api = DioExtended(
+  baseUrl: 'https://api.example.com',
+  interceptors: [createChuckerInterceptor()],
+);
 ```
 
 > [!IMPORTANT]

@@ -1,3 +1,11 @@
+## 2.0.0
+
+- BREAKING: move Chucker-specific APIs out of `package:dio_extended/diox.dart` into `package:dio_extended/diox_chucker.dart`
+- Add the new `diox_chucker.dart` entrypoint for `ShakeForChucker`, `ShakeChuckerConfigs`, and `createChuckerInterceptor()`
+- Add optional `interceptors` support to `DioExtended` so Chucker can be wired explicitly without coupling the core entrypoint to platform-specific UI dependencies
+- Raise the lower bound of `chucker_flutter` to `>=1.9.2` to match the `navigatorKey` API used by `ShakeChuckerConfigs`
+- Declare support for Windows, Linux, and macOS in package metadata
+
 ## 1.0.20
 
 - Fix `ApiResult.isSuccess` to use an explicit success flag instead of inferring from `data != null`, so successful responses with an empty body (e.g. `204 No Content` or `ApiResult<void>`) are no longer reported as failures
